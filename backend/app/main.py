@@ -5,7 +5,22 @@ from sqlalchemy.orm import Session
 from .db import get_db
 from .core.config import settings
 
+from .api import auth, schools, riders
+from .db import engine, Base
+# Import all models to ensure they are registered with Base.metadata
+from .models.user import User
+from .models.school import School
+from .models.rider import Rider
+
 app = FastAPI(title=settings.PROJECT_NAME)
+
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
+
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(schools.router, prefix="/api/schools", tags=["schools"])
+app.include_router(riders.router, prefix="/api/riders", tags=["riders"])
 
 @app.get("/")
 def read_root():

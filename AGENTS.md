@@ -4,34 +4,42 @@
 - **Backend**: FastAPI (Python 3.12), SQLAlchemy 2.0, Pydantic v2
 - **Frontend**: Vite, React, TypeScript, Tailwind CSS v4
 - **Database**: PostgreSQL 16
-- **Testing**: Pytest (Backend), Vitest + React Testing Library (Frontend)
+- **Testing**: Pytest (Backend), Vitest (Frontend), Playwright (E2E)
 
 ## Key Commands
 
-### Docker (Preferred for Consistency)
-- `docker-compose up --build`: Start the entire stack
-- `docker-compose run -e PYTHONPATH=. backend pytest`: Run backend tests
-- `docker-compose run frontend npm run test -- --run`: Run frontend tests
+### Development
+- `docker-compose up --build`: Start the entire stack.
+- `docker-compose logs -f [service]`: Follow logs for a specific service.
 
-### Backend (Local)
-- `pytest`: Run backend tests (requires `PYTHONPATH=.`)
-- `uvicorn app.main:app --reload`: Start dev server
+### Testing
+- `docker-compose run -e PYTHONPATH=. backend pytest`: Run backend unit/integration tests.
+- `docker-compose run frontend npm run test -- --run`: Run frontend component tests.
+- `cd e2e && npx playwright test`: Run full E2E journey and leak tests.
 
-### Frontend (Local)
-- `npm run dev`: Start Vite dev server
-- `npm run test`: Run Vitest
-- `npm run build`: Build for production
+## AI Agent Instructions
+As an AI agent working on this codebase, you MUST adhere to the following workflow:
 
-## Development Boundaries
-1. **Schema Changes**: Do not modify database schemas in `app/models/` without explicit user approval.
-2. **Migrations**: Use Alembic (to be added) for all database schema changes.
-3. **Typing**: Strict TypeScript and Python type hinting is required.
-4. **Testing**: New features MUST include corresponding tests.
-5. **Tailwind**: Use CSS-first configuration for Tailwind v4. Prefer standard utility classes.
+1.  **Safety First**: Before making any functional changes, run the existing test suite (`pytest` and `playwright`) to establish a baseline.
+2.  **Multi-Tenancy Integrity**: 
+    - Every new database model (except User/School core) MUST use `TenantMixin` from `app.models.base`.
+    - Every API endpoint MUST filter queries by `current_user.school_id`.
+    - NEVER return data that doesn't belong to the authenticated user's school.
+3.  **Test-Driven Development**:
+    - When adding a feature, add a corresponding backend test in `backend/tests/`.
+    - For UI features, update the E2E suite in `e2e/tests/` to cover the new journey.
+    - Always run `npx playwright test` after UI changes to ensure the "Multi-tenant leak test" still passes.
+4.  **Schema and Migrations**:
+    - Do not modify `app/models/` without approval.
+    - Use Alembic for migrations (when implemented). For now, `Base.metadata.create_all` is used on startup.
+5.  **Authentication**:
+    - Use `deps.get_current_active_school_user` for endpoints requiring a school context.
+    - Use `deps.get_current_user` for onboarding endpoints where a school might not exist yet.
 
 ## Project Structure
-- `backend/app/api`: Route handlers
-- `backend/app/models`: SQLAlchemy models
-- `backend/app/schemas`: Pydantic models
-- `frontend/src/components`: UI components
-- `frontend/src/hooks`: Custom React hooks
+- `backend/app/api`: Route handlers, organized by feature.
+- `backend/app/models`: SQLAlchemy models (use `TenantMixin` for isolation).
+- `backend/app/schemas`: Pydantic models for validation.
+- `frontend/src/pages`: Top-level route components.
+- `frontend/src/layouts`: Shared UI wrappers (e.g., `AuthLayout`).
+- `e2e/tests`: Playwright specs, including critical security leak tests.

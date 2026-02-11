@@ -3,6 +3,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db import Base, get_db
 from app.main import app
+from app.models.base import Base
+from app.models.user import User
+from app.models.school import School
 
 # Use an in-memory SQLite for tests or a test postgres
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -15,6 +18,14 @@ def setup_test_db():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture
+def db_session():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 def override_get_db():
     try:
