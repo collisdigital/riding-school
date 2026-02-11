@@ -14,12 +14,7 @@ export default function CreateSchoolPage() {
     setLoading(true)
     setError('')
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(
-        '/api/schools/',
-        { name: schoolName },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
+      await axios.post('/api/schools/', { name: schoolName })
 
       // Update token (since school_id is now in it)
       // For simplicity in this demo, we'll just re-login or use the same token

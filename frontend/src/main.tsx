@@ -8,6 +8,10 @@ import RegisterPage from './pages/RegisterPage'
 import CreateSchoolPage from './pages/CreateSchoolPage'
 import DashboardPage from './pages/DashboardPage'
 import { ProtectedRoute } from './layouts/ProtectedRoute'
+import axios from 'axios'
+
+// Configure axios to always send cookies
+axios.defaults.withCredentials = true
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

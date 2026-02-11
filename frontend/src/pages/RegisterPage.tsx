@@ -39,8 +39,8 @@ export default function RegisterPage() {
       loginForm.append('username', formData.email)
       loginForm.append('password', formData.password)
 
-      const loginRes = await axios.post('/api/auth/login', loginForm)
-      localStorage.setItem('token', loginRes.data.access_token)
+      await axios.post('/api/auth/login', loginForm)
+      localStorage.setItem('authenticated', 'true')
 
       navigate('/onboarding/create-school')
     } catch (err) {

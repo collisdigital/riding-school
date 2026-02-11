@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-
 from app.api import deps
 from app.core import security
+from app.core.config import settings
 from app.db import get_db
 from app.models.user import User
 from app.schemas import Token, UserCreate, UserSchema, UserWithSchool
@@ -39,7 +39,9 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(
-    db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
+    response: Response,
+    db: Session = Depends(get_db),
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not security.verify_password(
@@ -47,7 +49,25 @@ def login(
     ):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
+    access_token = security.create_access_token(user.id, school_id=user.school_id)
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="lax",
+        secure=False,  # Set to True in production
+    )
+
     return {
-        "access_token": security.create_access_token(user.id, school_id=user.school_id),
+        "access_token": access_token,
         "token_type": "bearer",
     }
+
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("access_token")
+    return {"message": "Successfully logged out"}
