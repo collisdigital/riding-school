@@ -1,0 +1,19 @@
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Docker
+.docker/
+
+# Databases
+*.db
+*.sqlite
