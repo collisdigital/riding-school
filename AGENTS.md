@@ -52,6 +52,15 @@ As an AI agent working on this codebase, you MUST adhere to the following workfl
 7.  **Authentication**:
     - Use `deps.get_current_active_school_user` for endpoints requiring a school context.
     - Use `deps.get_current_user` for onboarding endpoints where a school might not exist yet.
+8.  **Configuration & Security**:
+    - Set `SECRET_KEY` to a secure value in non-development environments; `ENVIRONMENT` controls enforcement.
+    - Use `SECURE_COOKIES=true` when deploying behind HTTPS to ensure auth cookies are secure.
+    - Prefer DB pool settings (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`) for production deployments.
+9.  **Database Writes**:
+    - Wrap `db.commit()` in `try/except SQLAlchemyError`, call `db.rollback()` on failure, and surface an HTTP 500.
+    - Avoid leaving partially flushed state (especially in multi-step create flows).
+10. **E2E Test Setup**:
+    - Playwright expects the frontend available at `http://localhost:5173` (use `docker-compose up --build` or run the Vite dev server).
 
 ## Project Structure
 - `backend/app/api`: Route handlers, organized by feature.
