@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
@@ -12,10 +12,22 @@ from app.models.rbac import Role, UserPermissionOverride
 from app.models.user import User
 from app.schemas import TokenPayload
 
-reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
-def get_token_payload(token: str = Depends(reusable_oauth2)) -> TokenPayload:
+def get_token_payload(
+    request: Request, token: str | None = Depends(reusable_oauth2)
+) -> TokenPayload:
+    if not token:
+        token = request.cookies.get("access_token")
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

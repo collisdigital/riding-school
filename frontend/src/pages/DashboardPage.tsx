@@ -13,20 +13,12 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token')
-        // We need an endpoint for the current user's school or similar
-        // For now, let's assume we can get it from the user info or another call.
-        // I will add a simple /api/auth/me to get the user and school info.
-        const userRes = await axios.get('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const userRes = await axios.get('/api/auth/me')
         if (userRes.data.school) {
           setSchoolName(userRes.data.school.name)
         }
 
-        const ridersRes = await axios.get('/api/riders/', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const ridersRes = await axios.get('/api/riders/')
         setRiders(ridersRes.data)
       } catch {
         // ignore
@@ -38,12 +30,10 @@ export default function DashboardPage() {
   const handleAddRider = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const token = localStorage.getItem('token')
-      const res = await axios.post(
-        '/api/riders/',
-        { first_name: newRiderFirstName, last_name: newRiderLastName },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
+      const res = await axios.post('/api/riders/', {
+        first_name: newRiderFirstName,
+        last_name: newRiderLastName,
+      })
       setRiders([...riders, res.data])
       setNewRiderFirstName('')
       setNewRiderLastName('')
@@ -52,8 +42,13 @@ export default function DashboardPage() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
+  const handleLogout = async () => {
+    try {
+      await axios.post('/api/auth/logout')
+    } catch {
+      // Ignore logout errors
+    }
+    localStorage.removeItem('authenticated')
     navigate('/login')
   }
 

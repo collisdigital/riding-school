@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { expect, test, vi, beforeEach, type Mocked } from 'vitest'
-import { BrowserRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import RegisterPage from './RegisterPage'
 import axios from 'axios'
 
@@ -19,9 +19,12 @@ mockedAxios.isAxiosError.mockImplementation((payload: unknown) => {
 
 const renderRegisterPage = () => {
   return render(
-    <BrowserRouter>
-      <RegisterPage />
-    </BrowserRouter>,
+    <MemoryRouter initialEntries={['/register']}>
+      <Routes>
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/onboarding/create-school" element={<div>Create School</div>} />
+      </Routes>
+    </MemoryRouter>,
   )
 }
 
@@ -101,5 +104,9 @@ test('successfully registers and redirects', async () => {
   await waitFor(() => {
     expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/register', expect.anything())
     expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/login', expect.anything())
+  })
+
+  await waitFor(() => {
+    expect(screen.getByText('Create School')).toBeInTheDocument()
   })
 })

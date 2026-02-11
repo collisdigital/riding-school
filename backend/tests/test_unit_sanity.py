@@ -66,7 +66,7 @@ async def test_get_current_user_uuid_conversion():
     mock_filter.first.return_value = User(id=user_id, email="test@test.com")
 
     # 1. Get token payload
-    token_data = get_token_payload(token=token)
+    token_data = get_token_payload(request=MagicMock(), token=token)
 
     # 2. Get user using payload
     user = get_current_user(db=db, token_data=token_data)
