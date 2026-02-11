@@ -82,6 +82,8 @@ class UserPermissionOverride(Base, TimestampMixin):
     )
     allow = Column(Boolean, default=True)  # True = allow, False = explicitly deny
 
+    permission = relationship("Permission")
+
 
 class Relationship(Base, TimestampMixin):
     __tablename__ = "relationships"
