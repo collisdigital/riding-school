@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 import pytest
 from jose import jwt
 
-from app.api.deps import get_current_user
 from app.core.config import settings
 from app.models.user import User
 from app.schemas import UserSchema
@@ -47,6 +46,8 @@ async def test_get_current_user_uuid_conversion():
     Test that get_current_user correctly converts string sub to UUID.
     This would have caught the AttributeError: 'str' object has no attribute 'hex'.
     """
+    from app.api.deps import get_current_user, get_token_payload
+
     db = MagicMock()
     user_id = uuid.uuid4()
 
@@ -58,11 +59,17 @@ async def test_get_current_user_uuid_conversion():
     # Mock the query chain
     mock_query = db.query.return_value
     mock_options = mock_query.options.return_value
+    # mock_options.joinedload... returns self
+    mock_options.joinedload.return_value = mock_options
+
     mock_filter = mock_options.filter.return_value
     mock_filter.first.return_value = User(id=user_id, email="test@test.com")
 
-    # This call should not raise AttributeError
-    user = get_current_user(db=db, token=token)
+    # 1. Get token payload
+    token_data = get_token_payload(token=token)
+
+    # 2. Get user using payload
+    user = get_current_user(db=db, token_data=token_data)
 
     assert user.id == user_id
     # Verify the filter was called with a UUID object, not a string
