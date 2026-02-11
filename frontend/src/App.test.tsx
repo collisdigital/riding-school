@@ -25,10 +25,12 @@ test('renders riding school tracker title', async () => {
 
 test('shows loading message initially', async () => {
   // Use a promise that resolves but we check initial state first
-  let resolveFetch: (value: any) => void = () => {}
-  mockFetch.mockReturnValue(new Promise((resolve) => {
+  let resolveFetch: (value: unknown) => void = () => {}
+  mockFetch.mockReturnValue(
+    new Promise((resolve) => {
       resolveFetch = resolve
-  }))
+    }),
+  )
 
   render(<App />)
   const loadingElement = screen.getByText(/Loading.../i)
@@ -36,7 +38,7 @@ test('shows loading message initially', async () => {
 
   // Clean up by resolving the promise so the test can finish cleanly
   resolveFetch({
-      json: () => Promise.resolve({ message: 'Done' })
+    json: () => Promise.resolve({ message: 'Done' }),
   })
 
   await waitFor(() => expect(screen.getByText('Done')).toBeInTheDocument())

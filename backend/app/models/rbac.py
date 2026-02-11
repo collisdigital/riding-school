@@ -74,9 +74,7 @@ class Role(Base, TimestampMixin):
 class UserPermissionOverride(Base, TimestampMixin):
     __tablename__ = "user_permission_overrides"
 
-    user_id = Column(
-        Uuid, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
-    )
+    user_id = Column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     permission_id = Column(
         Uuid,
         ForeignKey("permissions.id", ondelete="CASCADE"),
