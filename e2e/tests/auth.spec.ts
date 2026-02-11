@@ -63,21 +63,23 @@ test('multi-tenant leak test', async ({ browser }) => {
   await pageB.click('button:text("Create School & Start Tracking")');
   await pageB.waitForURL('/dashboard');
 
-  // Context A: Add a rider "Thunder"
+  // Context A: Add a rider "Thunder Horse"
   await pageA.fill('input[placeholder="Rider First Name"]', 'Thunder');
+  await pageA.fill('input[placeholder="Rider Last Name"]', 'Horse');
   await pageA.click('button:text("Add Rider")');
-  await expect(pageA.locator('text=Thunder')).toBeVisible();
+  await expect(pageA.locator('text=Thunder Horse')).toBeVisible();
 
-  // Context B: Check that "Thunder" is NOT visible
-  await expect(pageB.locator('text=Thunder')).not.toBeVisible();
+  // Context B: Check that "Thunder Horse" is NOT visible
+  await expect(pageB.locator('text=Thunder Horse')).not.toBeVisible();
   await expect(pageB.locator('text=No riders added yet.')).toBeVisible();
 
-  // Context B: Add a rider "Lightning"
+  // Context B: Add a rider "Lightning Flash"
   await pageB.fill('input[placeholder="Rider First Name"]', 'Lightning');
+  await pageB.fill('input[placeholder="Rider Last Name"]', 'Flash');
   await pageB.click('button:text("Add Rider")');
-  await expect(pageB.locator('text=Lightning')).toBeVisible();
+  await expect(pageB.locator('text=Lightning Flash')).toBeVisible();
 
-  // Context A: Check that "Lightning" is NOT visible
-  await expect(pageA.locator('text=Lightning')).not.toBeVisible();
-  await expect(pageA.locator('text=Thunder')).toBeVisible();
+  // Context A: Check that "Lightning Flash" is NOT visible
+  await expect(pageA.locator('text=Lightning Flash')).not.toBeVisible();
+  await expect(pageA.locator('text=Thunder Horse')).toBeVisible();
 });
