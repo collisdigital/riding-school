@@ -26,9 +26,10 @@ export default function RegisterPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    const normalizedEmail = formData.email.trim().toLowerCase()
     try {
       await axios.post('/api/auth/register', {
-        email: formData.email,
+        email: normalizedEmail,
         password: formData.password,
         first_name: formData.firstName,
         last_name: formData.lastName,
@@ -36,7 +37,7 @@ export default function RegisterPage() {
 
       // Auto-login after registration
       const loginForm = new FormData()
-      loginForm.append('username', formData.email)
+      loginForm.append('username', normalizedEmail)
       loginForm.append('password', formData.password)
 
       await axios.post('/api/auth/login', loginForm)
