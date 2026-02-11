@@ -52,6 +52,7 @@ def get_current_user(
     user = (
         db.query(User)
         .options(
+            joinedload(User.school),
             joinedload(User.roles).joinedload(Role.permissions),
             joinedload(User.permission_overrides).joinedload(
                 UserPermissionOverride.permission

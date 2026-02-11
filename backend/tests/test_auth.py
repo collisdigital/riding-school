@@ -1,8 +1,12 @@
+from uuid import uuid4
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.core import security
 from app.main import app
+from app.models.school import School
+from app.models.user import User
 
 
 @pytest.mark.asyncio
@@ -68,6 +72,40 @@ async def test_password_is_hashed(db_session):
     assert user is not None
     assert user.hashed_password != password
     assert security.verify_password(password, user.hashed_password)
+
+
+@pytest.mark.asyncio
+async def test_get_me_success(db_session):
+    # 1. Create a school and a user
+    school = School(name="Test School", slug=f"test-school-{uuid4().hex[:8]}")
+    db_session.add(school)
+    db_session.flush()
+
+    user = User(
+        email="me@example.com",
+        hashed_password=security.get_password_hash("password123"),
+        first_name="Me",
+        last_name="Test",
+        school_id=school.id,
+    )
+    db_session.add(user)
+    db_session.commit()
+
+    # 2. Get token
+    token = security.create_access_token(user.id, school_id=school.id)
+
+    # 3. Call /me
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get(
+            "/api/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "me@example.com"
+    assert data["school"]["name"] == "Test School"
 
 
 @pytest.mark.asyncio
