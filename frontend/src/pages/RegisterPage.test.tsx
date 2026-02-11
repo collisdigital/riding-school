@@ -8,8 +8,13 @@ vi.mock('axios')
 const mockedAxios = axios as Mocked<typeof axios>
 
 // Helper to check if an element is axios error mock compatible
-mockedAxios.isAxiosError.mockImplementation((payload: any) => {
-  return payload && payload.isAxiosError === true
+mockedAxios.isAxiosError.mockImplementation((payload: unknown) => {
+  return (
+    payload !== null &&
+    typeof payload === 'object' &&
+    'isAxiosError' in payload &&
+    (payload as { isAxiosError: unknown }).isAxiosError === true
+  )
 })
 
 const renderRegisterPage = () => {
