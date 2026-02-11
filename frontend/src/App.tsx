@@ -14,12 +14,8 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md w-full">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">
-          Riding School Tracker
-        </h1>
-        <p className="text-gray-600 text-lg mb-6">
-          {message}
-        </p>
+        <h1 className="text-3xl font-bold text-blue-600 mb-4">Riding School Tracker</h1>
+        <p className="text-gray-600 text-lg mb-6">{message}</p>
         <div className="space-y-4">
           <p className="text-sm text-gray-500">
             Welcome to the future of progress tracking for riders.

@@ -15,18 +15,23 @@ export default function CreateSchoolPage() {
     setError('')
     try {
       const token = localStorage.getItem('token')
-      await axios.post('/api/schools/', 
+      await axios.post(
+        '/api/schools/',
         { name: schoolName },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       )
-      
+
       // Update token (since school_id is now in it)
       // For simplicity in this demo, we'll just re-login or use the same token
       // In a real app, the backend might return a new token or we'd refresh it.
-      
+
       navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create school')
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail)
+      } else {
+        setError('Failed to create school')
+      }
     } finally {
       setLoading(false)
     }
@@ -44,13 +49,9 @@ export default function CreateSchoolPage() {
             One last step to set up your tracking platform.
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
+          {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
           <div>
             <label className="block text-sm font-medium text-gray-700">School Name</label>
             <input

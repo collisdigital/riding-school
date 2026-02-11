@@ -1,20 +1,19 @@
 import uuid
-from typing import Generator, Optional, List
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.orm import Session, joinedload
-from app.db import get_db
+
 from app.core.config import settings
-from app.core import security
+from app.db import get_db
+from app.models.rbac import Role
 from app.models.user import User
-from app.models.rbac import Role, Permission, UserPermissionOverride
 from app.schemas import TokenPayload
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl="/api/auth/login"
-)
+reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
 
 def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
@@ -28,20 +27,26 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
-        )
-    
+        ) from None
+
     try:
         user_id = uuid.UUID(token_data.sub)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid token subject")
+        raise HTTPException(status_code=400, detail="Invalid token subject") from None
 
-    user = db.query(User).options(
-        joinedload(User.roles).joinedload(Role.permissions),
-        joinedload(User.permission_overrides)
-    ).filter(User.id == user_id).first()
+    user = (
+        db.query(User)
+        .options(
+            joinedload(User.roles).joinedload(Role.permissions),
+            joinedload(User.permission_overrides),
+        )
+        .filter(User.id == user_id)
+        .first()
+    )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
 
 def get_user_permissions(user: User) -> set:
     permissions = set()
@@ -49,17 +54,18 @@ def get_user_permissions(user: User) -> set:
     for role in user.roles:
         for perm in role.permissions:
             permissions.add(perm.name)
-    
+
     # Add/Remove from overrides
     for override in user.permission_overrides:
         if override.allow:
             permissions.add(override.permission.name)
         else:
             permissions.discard(override.permission.name)
-            
+
     return permissions
 
-def check_permissions(required_permissions: List[str]):
+
+def check_permissions(required_permissions: list[str]):
     def permission_checker(current_user: User = Depends(get_current_user)) -> User:
         user_perms = get_user_permissions(current_user)
         for perm in required_permissions:
@@ -69,6 +75,7 @@ def check_permissions(required_permissions: List[str]):
                     detail=f"Missing required permission: {perm}",
                 )
         return current_user
+
     return permission_checker
 
 
