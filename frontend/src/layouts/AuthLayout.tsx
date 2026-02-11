@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Beef } from 'lucide-react'
+import { ChessKnight } from 'lucide-react'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -13,7 +13,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
       <div className="hidden lg:flex flex-col justify-between p-12 bg-blue-600 text-white">
         <div>
           <div className="flex items-center space-x-2 text-2xl font-bold">
-            <Beef className="w-8 h-8" />
+            <ChessKnight className="w-8 h-8" />
             <span>Riding School Tracker</span>
           </div>
         </div>

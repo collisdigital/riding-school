@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Beef, Users, Star, GraduationCap, LogOut } from 'lucide-react'
+import { ChessKnight, Users, Star, GraduationCap, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
@@ -60,7 +60,7 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
         <div className="p-6 flex items-center space-x-2 text-xl font-bold text-blue-600 border-b border-gray-100">
-          <Beef className="w-6 h-6" />
+          <ChessKnight className="w-6 h-6" />
           <span>Tracker</span>
         </div>
         <nav className="flex-1 p-4 space-y-2">

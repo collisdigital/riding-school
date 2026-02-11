@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Beef, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { ChessKnight, ChevronRight, CheckCircle2 } from 'lucide-react'
 
 export default function LandingPage() {
   return (
@@ -7,7 +7,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
         <div className="flex items-center space-x-2 text-2xl font-bold text-blue-600">
-          <Beef className="w-8 h-8" />
+          <ChessKnight className="w-8 h-8" />
           <span>Riding School Tracker</span>
         </div>
         <div className="flex items-center space-x-4">
@@ -59,7 +59,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden lg:block lg:w-1/2 ml-12">
             <div className="bg-gray-100 rounded-3xl p-8 aspect-video flex items-center justify-center border-4 border-white shadow-2xl">
-              <Beef className="w-32 h-32 text-blue-200" />
+              <ChessKnight className="w-32 h-32 text-blue-200" />
             </div>
           </div>
         </div>

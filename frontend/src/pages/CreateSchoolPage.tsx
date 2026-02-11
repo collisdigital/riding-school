@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Beef } from 'lucide-react'
+import { ChessKnight } from 'lucide-react'
 import axios from 'axios'
 
 export default function CreateSchoolPage() {
@@ -42,7 +42,7 @@ export default function CreateSchoolPage() {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-8">
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-            <Beef className="h-10 w-10" />
+            <ChessKnight className="h-10 w-10" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Name Your School</h2>
           <p className="mt-2 text-sm text-gray-600">
