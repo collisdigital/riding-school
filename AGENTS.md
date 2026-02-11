@@ -37,14 +37,19 @@ As an AI agent working on this codebase, you MUST adhere to the following workfl
     - Every new database model (except User/School core) MUST use `TenantMixin` from `app.models.base`.
     - Every API endpoint MUST filter queries by `current_user.school_id`.
     - NEVER return data that doesn't belong to the authenticated user's school.
-4.  **Test-Driven Development**:
+4.  **Test-Driven Development (TDD)**:
+    - You are strongly advised to follow a TDD approach: write your tests FIRST before implementing new features to define the expected behavior and ensure they work as intended.
     - When adding a feature, add a corresponding backend test in `backend/tests/`.
     - For UI features, update the E2E suite in `e2e/tests/` to cover the new journey.
     - Always run `npx playwright test` after UI changes to ensure the "Multi-tenant leak test" still passes.
-4.  **Schema and Migrations**:
+5.  **Test Coverage**:
+    - Test coverage MUST NOT decrease when changes are made to the codebase.
+    - Ideally, every change should increase the overall coverage percentage.
+    - Run coverage reports locally before committing to verify you haven't introduced uncovered paths.
+6.  **Schema and Migrations**:
     - Do not modify `app/models/` without approval.
     - Use Alembic for migrations (when implemented). For now, `Base.metadata.create_all` is used on startup.
-5.  **Authentication**:
+7.  **Authentication**:
     - Use `deps.get_current_active_school_user` for endpoints requiring a school context.
     - Use `deps.get_current_user` for onboarding endpoints where a school might not exist yet.
 
