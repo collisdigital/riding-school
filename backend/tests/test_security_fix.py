@@ -8,7 +8,7 @@ from app.main import app
 async def test_login_sets_cookie():
     payload = {
         "username": "test@example.com",
-        "password": "strongpassword123",
+        "password": "StrongPass1!",
     }
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -17,7 +17,7 @@ async def test_login_sets_cookie():
             "/api/auth/register",
             json={
                 "email": "test@example.com",
-                "password": "strongpassword123",
+                "password": "StrongPass1!",
                 "first_name": "Test",
                 "last_name": "User",
             },
@@ -40,7 +40,7 @@ async def test_login_sets_cookie():
 async def test_get_me_with_cookie():
     payload = {
         "username": "cookie@example.com",
-        "password": "password123",
+        "password": "StrongPass1!",
     }
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -49,7 +49,7 @@ async def test_get_me_with_cookie():
             "/api/auth/register",
             json={
                 "email": "cookie@example.com",
-                "password": "password123",
+                "password": "StrongPass1!",
                 "first_name": "Cookie",
                 "last_name": "User",
             },
@@ -70,7 +70,7 @@ async def test_get_me_with_cookie():
 async def test_logout_clears_cookie():
     payload = {
         "username": "logout@example.com",
-        "password": "password123",
+        "password": "StrongPass1!",
     }
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -79,7 +79,7 @@ async def test_logout_clears_cookie():
             "/api/auth/register",
             json={
                 "email": "logout@example.com",
-                "password": "password123",
+                "password": "StrongPass1!",
                 "first_name": "Logout",
                 "last_name": "User",
             },
