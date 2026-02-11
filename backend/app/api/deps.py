@@ -8,16 +8,14 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
 from app.db import get_db
-from app.models.rbac import Role
+from app.models.rbac import Role, UserPermissionOverride
 from app.models.user import User
 from app.schemas import TokenPayload
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
-def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
-) -> User:
+def get_token_payload(token: str = Depends(reusable_oauth2)) -> TokenPayload:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
@@ -28,7 +26,12 @@ def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         ) from None
+    return token_data
 
+
+def get_current_user(
+    db: Session = Depends(get_db), token_data: TokenPayload = Depends(get_token_payload)
+) -> User:
     try:
         user_id = uuid.UUID(token_data.sub)
     except ValueError:
@@ -38,11 +41,27 @@ def get_current_user(
         db.query(User)
         .options(
             joinedload(User.roles).joinedload(Role.permissions),
-            joinedload(User.permission_overrides),
+            joinedload(User.permission_overrides).joinedload(
+                UserPermissionOverride.permission
+            ),
         )
         .filter(User.id == user_id)
         .first()
     )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+def get_current_user_simple(
+    db: Session = Depends(get_db), token_data: TokenPayload = Depends(get_token_payload)
+) -> User:
+    try:
+        user_id = uuid.UUID(token_data.sub)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid token subject") from None
+
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -80,7 +99,7 @@ def check_permissions(required_permissions: list[str]):
 
 
 def get_current_active_school_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_simple),
 ) -> User:
     if not current_user.school_id:
         raise HTTPException(
