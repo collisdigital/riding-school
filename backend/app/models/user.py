@@ -1,14 +1,9 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, Enum
+from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-import enum
 from .base import Base, TimestampMixin
-
-class UserRole(str, enum.Enum):
-    OWNER = "OWNER"
-    INSTRUCTOR = "INSTRUCTOR"
-    RIDER = "RIDER"
+from .rbac import user_roles
 
 class User(Base, TimestampMixin):
     __tablename__ = "users"
@@ -18,10 +13,31 @@ class User(Base, TimestampMixin):
     hashed_password = Column(String, nullable=False)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.RIDER)
     
-    school_id = Column(UUID(as_uuid=True), ForeignKey("schools.id"), nullable=True)
+    school_id = Column(UUID(as_uuid=True), ForeignKey("schools.id", ondelete="SET NULL"), nullable=True)
     school = relationship("School", back_populates="users")
+
+    # RBAC
+    roles = relationship("Role", secondary=user_roles, backref="users")
+    permission_overrides = relationship("UserPermissionOverride", backref="user", cascade="all, delete-orphan")
+
+    # Parent-Child Relationships
+    child_relationships = relationship(
+        "Relationship",
+        foreign_keys="Relationship.parent_id",
+        back_populates="parent",
+        cascade="all, delete-orphan"
+    )
+    parent_relationships = relationship(
+        "Relationship",
+        foreign_keys="Relationship.rider_id",
+        back_populates="rider",
+        cascade="all, delete-orphan"
+    )
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
 
     def __repr__(self):
         return f"<User(email='{self.email}')>"

@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.api import deps
 from app.models.school import School
-from app.models.user import User, UserRole
+from app.models.user import User
+from app.models.rbac import Role
 from app.schemas import SchoolCreate, SchoolSchema
 import uuid
 
@@ -31,7 +32,17 @@ def create_school(
     db.flush() # Get the ID
     
     current_user.school_id = db_obj.id
-    current_user.role = UserRole.OWNER
+    
+    # Assign Admin role
+    admin_role = db.query(Role).filter(Role.name == "Admin").first()
+    if not admin_role:
+        # Fallback if roles aren't seeded yet
+        admin_role = Role(name="Admin")
+        db.add(admin_role)
+        db.flush()
+    
+    if admin_role not in current_user.roles:
+        current_user.roles.append(admin_role)
     
     db.commit()
     db.refresh(db_obj)

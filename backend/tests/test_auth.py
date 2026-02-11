@@ -1,11 +1,12 @@
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from app.main import app
 from app.core import security
 
 @pytest.mark.asyncio
 async def test_register_user_success():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.post(
             "/api/auth/register",
             json={
@@ -29,7 +30,8 @@ async def test_register_duplicate_email():
         "first_name": "Dup",
         "last_name": "User"
     }
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         await ac.post("/api/auth/register", json=payload)
         response = await ac.post("/api/auth/register", json=payload)
     
@@ -42,7 +44,8 @@ async def test_password_is_hashed(db_session):
     email = "hashed@example.com"
     password = "secretpassword"
     
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         await ac.post(
             "/api/auth/register",
             json={

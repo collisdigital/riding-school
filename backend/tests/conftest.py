@@ -7,6 +7,8 @@ from app.models.base import Base
 from app.models.user import User
 from app.models.school import School
 
+from app.core.seed import seed_rbac
+
 # Use an in-memory SQLite for tests or a test postgres
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
@@ -16,6 +18,9 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    seed_rbac(db)
+    db.close()
     yield
     Base.metadata.drop_all(bind=engine)
 

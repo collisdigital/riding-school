@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.core import security
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.schemas import UserCreate, UserSchema, Token, UserWithSchool
 from app.api import deps
 from datetime import timedelta
@@ -28,7 +28,6 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         hashed_password=security.get_password_hash(user_in.password),
         first_name=user_in.first_name,
         last_name=user_in.last_name,
-        role=UserRole.RIDER, # Default role
     )
     db.add(db_obj)
     db.commit()

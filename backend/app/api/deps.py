@@ -1,13 +1,15 @@
-from typing import Generator, Optional
+import uuid
+from typing import Generator, Optional, List
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.db import get_db
 from app.core.config import settings
 from app.core import security
 from app.models.user import User
+from app.models.rbac import Role, Permission, UserPermissionOverride
 from app.schemas import TokenPayload
 
 reusable_oauth2 = OAuth2PasswordBearer(
@@ -27,10 +29,48 @@ def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         )
-    user = db.query(User).filter(User.id == token_data.sub).first()
+    
+    try:
+        user_id = uuid.UUID(token_data.sub)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid token subject")
+
+    user = db.query(User).options(
+        joinedload(User.roles).joinedload(Role.permissions),
+        joinedload(User.permission_overrides)
+    ).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+def get_user_permissions(user: User) -> set:
+    permissions = set()
+    # Add from roles
+    for role in user.roles:
+        for perm in role.permissions:
+            permissions.add(perm.name)
+    
+    # Add/Remove from overrides
+    for override in user.permission_overrides:
+        if override.allow:
+            permissions.add(override.permission.name)
+        else:
+            permissions.discard(override.permission.name)
+            
+    return permissions
+
+def check_permissions(required_permissions: List[str]):
+    def permission_checker(current_user: User = Depends(get_current_user)) -> User:
+        user_perms = get_user_permissions(current_user)
+        for perm in required_permissions:
+            if perm not in user_perms:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Missing required permission: {perm}",
+                )
+        return current_user
+    return permission_checker
+
 
 def get_current_active_school_user(
     current_user: User = Depends(get_current_user),

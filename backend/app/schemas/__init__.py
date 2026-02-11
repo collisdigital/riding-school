@@ -1,6 +1,22 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+from pydantic import BaseModel, EmailStr, ConfigDict
+from typing import Optional, List
 from uuid import UUID
+
+# RBAC
+class PermissionSchema(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class RoleSchema(BaseModel):
+    id: UUID
+    name: str
+    description: Optional[str] = None
+    permissions: List[PermissionSchema] = []
+
+    model_config = ConfigDict(from_attributes=True)
 
 # Shared properties
 class UserBase(BaseModel):
@@ -16,13 +32,15 @@ class UserCreate(UserBase):
     last_name: str
 
 # Properties to return via API
-class UserSchema(UserBase):
+class UserSchema(BaseModel):
     id: UUID
+    email: EmailStr
+    first_name: str
+    last_name: str
     school_id: Optional[UUID] = None
-    role: str
+    roles: List[RoleSchema] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SchoolBase(BaseModel):
     name: str
@@ -34,8 +52,7 @@ class SchoolSchema(SchoolBase):
     id: UUID
     slug: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserWithSchool(UserSchema):
     school: Optional[SchoolSchema] = None

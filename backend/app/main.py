@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -5,22 +6,33 @@ from sqlalchemy.orm import Session
 from .db import get_db
 from .core.config import settings
 
-from .api import auth, schools, riders
-from .db import engine, Base
+from .api import auth, schools, riders, relationships
+from .db import engine, Base, SessionLocal
+from .core.seed import seed_rbac
 # Import all models to ensure they are registered with Base.metadata
 from .models.user import User
 from .models.school import School
 from .models.rider import Rider
+from .models.rbac import Permission, Role, Relationship, UserPermissionOverride
 
-app = FastAPI(title=settings.PROJECT_NAME)
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Create tables and seed RBAC
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_rbac(db)
+    finally:
+        db.close()
+    yield
+    # Shutdown: Clean up resources if needed
+
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(schools.router, prefix="/api/schools", tags=["schools"])
 app.include_router(riders.router, prefix="/api/riders", tags=["riders"])
+app.include_router(relationships.router, prefix="/api/relationships", tags=["relationships"])
 
 @app.get("/")
 def read_root():
