@@ -1,7 +1,6 @@
 import uuid
-from typing import Optional
 
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
@@ -17,7 +16,7 @@ reusable_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=Fa
 
 
 def get_token_payload(
-    request: Request, token: Optional[str] = Depends(reusable_oauth2)
+    request: Request, token: str | None = Depends(reusable_oauth2)
 ) -> TokenPayload:
     if not token:
         token = request.cookies.get("access_token")
@@ -30,7 +29,9 @@ def get_token_payload(
         )
 
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
         token_data = TokenPayload(**payload)
     except (jwt.JWTError, ValidationError):
         raise HTTPException(

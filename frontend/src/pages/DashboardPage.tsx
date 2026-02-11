@@ -45,7 +45,9 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       await axios.post('/api/auth/logout')
-    } catch (err) {}
+    } catch {
+      // Ignore logout errors
+    }
     localStorage.removeItem('authenticated')
     navigate('/login')
   }

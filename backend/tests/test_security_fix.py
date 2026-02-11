@@ -1,6 +1,8 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
+
 
 @pytest.mark.asyncio
 async def test_login_sets_cookie():
@@ -27,7 +29,8 @@ async def test_login_sets_cookie():
     assert response.status_code == 200
     assert "access_token" in response.cookies
     assert response.cookies.get("access_token") is not None
-    # Check for HttpOnly (httpx might not show all attributes in cookies dict easily but we can check headers)
+    # Check for HttpOnly (httpx might not show all attributes in cookies dict 
+    # easily but we can check headers)
     set_cookie = response.headers.get("set-cookie")
     assert "HttpOnly" in set_cookie
     assert "SameSite=lax" in set_cookie
@@ -90,4 +93,7 @@ async def test_logout_clears_cookie():
         # Check if cookie is cleared (Max-Age=0 or Expires in the past)
         set_cookie = logout_res.headers.get("set-cookie")
         assert 'access_token=""' in set_cookie or "access_token=;" in set_cookie
-        assert "Max-Age=0" in set_cookie or "expires=Thu, 01 Jan 1970 00:00:00 GMT" in set_cookie
+        assert (
+            "Max-Age=0" in set_cookie
+            or "expires=Thu, 01 Jan 1970 00:00:00 GMT" in set_cookie
+        )
