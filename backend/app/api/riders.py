@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -20,7 +21,11 @@ def create_rider(
 ):
     db_obj = Rider(**rider_in.model_dump(), school_id=current_user.school_id)
     db.add(db_obj)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create rider") from None
     db.refresh(db_obj)
     return db_obj
 
@@ -77,5 +82,9 @@ def delete_rider(
     if not rider:
         raise HTTPException(status_code=404, detail="Rider not found")
     db.delete(rider)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete rider") from None
     return None

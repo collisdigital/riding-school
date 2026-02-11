@@ -123,3 +123,16 @@ async def test_register_weak_password():
         )
     # Expect 422 Unprocessable Entity because validation should fail
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_get_me_invalid_token():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get(
+            "/api/auth/me",
+            headers={"Authorization": "Bearer invalid"},
+        )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Could not validate credentials"

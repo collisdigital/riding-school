@@ -1,8 +1,11 @@
+from uuid import uuid4
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.core import security
 from app.main import app
+from app.models.rbac import Relationship
 from app.models.school import School
 from app.models.user import User
 
@@ -102,3 +105,62 @@ async def test_link_child_from_other_school(db_session):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Child not found in your school"
+
+
+@pytest.mark.asyncio
+async def test_get_children_filters_by_school(db_session):
+    school_a = School(name="School A", slug=f"school-a-{uuid4().hex[:8]}")
+    school_b = School(name="School B", slug=f"school-b-{uuid4().hex[:8]}")
+    db_session.add_all([school_a, school_b])
+    db_session.flush()
+
+    pw = security.get_password_hash("password123")
+    parent = User(
+        email=f"parent-{uuid4().hex[:8]}@test.com",
+        hashed_password=pw,
+        first_name="Parent",
+        last_name="User",
+        school_id=school_a.id,
+    )
+    child_a = User(
+        email=f"child-a-{uuid4().hex[:8]}@test.com",
+        hashed_password=pw,
+        first_name="Child",
+        last_name="A",
+        school_id=school_a.id,
+    )
+    child_b = User(
+        email=f"child-b-{uuid4().hex[:8]}@test.com",
+        hashed_password=pw,
+        first_name="Child",
+        last_name="B",
+        school_id=school_b.id,
+    )
+    db_session.add_all([parent, child_a, child_b])
+    db_session.flush()
+
+    db_session.add_all(
+        [
+            Relationship(parent_id=parent.id, rider_id=child_a.id),
+            Relationship(parent_id=parent.id, rider_id=child_b.id),
+        ]
+    )
+    db_session.commit()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        login_res = await ac.post(
+            "/api/auth/login",
+            data={"username": parent.email, "password": "password123"},
+        )
+        token = login_res.json()["access_token"]
+
+        response = await ac.get(
+            "/api/relationships/children",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["email"] == child_a.email

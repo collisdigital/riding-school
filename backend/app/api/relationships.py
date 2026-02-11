@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -13,11 +14,17 @@ router = APIRouter()
 @router.get("/children", response_model=list[UserSchema])
 def get_children(
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(deps.get_current_active_school_user),
 ):
     # Fetch all riders linked to this parent
     relationships = (
-        db.query(Relationship).filter(Relationship.parent_id == current_user.id).all()
+        db.query(Relationship)
+        .join(User, Relationship.rider)
+        .filter(
+            Relationship.parent_id == current_user.id,
+            User.school_id == current_user.school_id,
+        )
+        .all()
     )
     children = [rel.rider for rel in relationships]
     return children
@@ -27,7 +34,7 @@ def get_children(
 def link_child(
     child_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: User = Depends(deps.get_current_active_school_user),
 ):
     import uuid
 
@@ -59,5 +66,9 @@ def link_child(
 
     rel = Relationship(parent_id=current_user.id, rider_id=c_id)
     db.add(rel)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to link child") from None
     return {"message": "Child linked successfully"}

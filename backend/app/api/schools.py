@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -29,21 +30,25 @@ def create_school(
 
     db_obj = School(name=school_in.name, slug=slug)
     db.add(db_obj)
-    db.flush()  # Get the ID
+    try:
+        db.flush()  # Get the ID
 
-    current_user.school_id = db_obj.id
+        current_user.school_id = db_obj.id
 
-    # Assign Admin role
-    admin_role = db.query(Role).filter(Role.name == "Admin").first()
-    if not admin_role:
-        # Fallback if roles aren't seeded yet
-        admin_role = Role(name="Admin")
-        db.add(admin_role)
-        db.flush()
+        # Assign Admin role
+        admin_role = db.query(Role).filter(Role.name == "Admin").first()
+        if not admin_role:
+            # Fallback if roles aren't seeded yet
+            admin_role = Role(name="Admin")
+            db.add(admin_role)
+            db.flush()
 
-    if admin_role not in current_user.roles:
-        current_user.roles.append(admin_role)
+        if admin_role not in current_user.roles:
+            current_user.roles.append(admin_role)
 
-    db.commit()
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create school") from None
     db.refresh(db_obj)
     return db_obj

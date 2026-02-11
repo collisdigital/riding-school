@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -33,7 +34,11 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         last_name=user_in.last_name,
     )
     db.add(db_obj)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to register user") from None
     db.refresh(db_obj)
     return db_obj
 
@@ -59,7 +64,7 @@ def login(
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
-        secure=False,  # Set to True in production
+        secure=settings.SECURE_COOKIES,
     )
 
     return {
