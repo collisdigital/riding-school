@@ -17,15 +17,27 @@
 - `docker-compose run frontend npm run test -- --run`: Run frontend component tests.
 - `cd e2e && npx playwright test`: Run full E2E journey and leak tests.
 
+### Linting & Formatting
+#### Backend (Ruff)
+- `ruff check .`: Check for linting errors.
+- `ruff format .`: Format code.
+
+#### Frontend (ESLint + Prettier)
+- `npm run lint`: Check for linting errors.
+- `npm run format`: Format code using Prettier.
+
 ## AI Agent Instructions
 As an AI agent working on this codebase, you MUST adhere to the following workflow:
 
 1.  **Safety First**: Before making any functional changes, run the existing test suite (`pytest` and `playwright`) to establish a baseline.
-2.  **Multi-Tenancy Integrity**: 
+2.  **Linting & Formatting**: 
+    - You MUST run `ruff format .` and `ruff check .` for backend changes.
+    - You MUST run `npm run format` and `npm run lint` for frontend changes.
+3.  **Multi-Tenancy Integrity**: 
     - Every new database model (except User/School core) MUST use `TenantMixin` from `app.models.base`.
     - Every API endpoint MUST filter queries by `current_user.school_id`.
     - NEVER return data that doesn't belong to the authenticated user's school.
-3.  **Test-Driven Development**:
+4.  **Test-Driven Development**:
     - When adding a feature, add a corresponding backend test in `backend/tests/`.
     - For UI features, update the E2E suite in `e2e/tests/` to cover the new journey.
     - Always run `npx playwright test` after UI changes to ensure the "Multi-tenant leak test" still passes.

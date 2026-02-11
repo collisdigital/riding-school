@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Lint with Ruff
+        run: ruff check .
+      - name: Check formatting with Ruff
+        run: ruff format --check .
+      - name: Run tests
+        run: |
+          export PYTHONPATH=.
+          pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Check formatting
+        run: npx prettier --check .
+      - name: Lint
+        run: npm run lint
+      - name: Run tests
+        run: npm run test -- --run
+
+  e2e:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        run: |
+          cd e2e
+          npm ci
+      - name: Install Playwright Browsers
+        run: |
+          cd e2e
+          npx playwright install chromium --with-deps
+      - name: Run Docker Compose
+        run: docker-compose up -d
+      - name: Wait for services
+        run: |
+          timeout 60s bash -c 'until curl -s http://localhost:8000/health; do sleep 2; done'
+      - name: Run E2E tests
+        run: |
+          cd e2e
+          npx playwright test
