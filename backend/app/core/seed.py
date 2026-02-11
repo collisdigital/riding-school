@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.rbac import Role, Permission
+
+from app.models.rbac import Permission, Role
 
 PERMISSIONS = [
     ("riders:view", "View riders"),
@@ -10,11 +11,18 @@ PERMISSIONS = [
 ]
 
 ROLES = {
-    "Admin": ["riders:view", "riders:edit", "riders:delete", "staff:manage", "grades:signoff"],
+    "Admin": [
+        "riders:view",
+        "riders:edit",
+        "riders:delete",
+        "staff:manage",
+        "grades:signoff",
+    ],
     "Instructor": ["riders:view", "riders:edit", "grades:signoff"],
     "Parent": ["riders:view"],
     "Rider": ["riders:view"],
 }
+
 
 def seed_rbac(db: Session):
     # 1. Create Permissions
@@ -34,8 +42,8 @@ def seed_rbac(db: Session):
             role = Role(name=role_name)
             db.add(role)
             db.flush()
-        
+
         # Sync permissions
         role.permissions = [perm_map[p] for p in perms]
-    
+
     db.commit()

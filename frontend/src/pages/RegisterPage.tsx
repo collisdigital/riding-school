@@ -19,40 +19,37 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
     try {
-      const response = await axios.post('/api/auth/register', {
+      await axios.post('/api/auth/register', {
         email: formData.email,
         password: formData.password,
         first_name: formData.firstName,
         last_name: formData.lastName,
       })
-      
+
       // Auto-login after registration
       const loginForm = new FormData()
       loginForm.append('username', formData.email)
       loginForm.append('password', formData.password)
-      
+
       const loginRes = await axios.post('/api/auth/login', loginForm)
       localStorage.setItem('token', loginRes.data.access_token)
-      
+
       navigate('/onboarding/create-school')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed')
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail)
+      } else {
+        setError('Registration failed')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <AuthLayout 
-      title="Create your account" 
-      subtitle="Start your 14-day free trial today."
-    >
+    <AuthLayout title="Create your account" subtitle="Start your 14-day free trial today.">
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-            {error}
-          </div>
-        )}
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">First Name</label>

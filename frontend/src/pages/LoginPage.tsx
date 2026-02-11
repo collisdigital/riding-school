@@ -20,29 +20,26 @@ export default function LoginPage() {
       const loginForm = new FormData()
       loginForm.append('username', formData.email)
       loginForm.append('password', formData.password)
-      
+
       const response = await axios.post('/api/auth/login', loginForm)
       localStorage.setItem('token', response.data.access_token)
-      
+
       navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed')
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail)
+      } else {
+        setError('Login failed')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <AuthLayout 
-      title="Welcome back" 
-      subtitle="Sign in to your school dashboard"
-    >
+    <AuthLayout title="Welcome back" subtitle="Sign in to your school dashboard">
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-            {error}
-          </div>
-        )}
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
         <div>
           <label className="block text-sm font-medium text-gray-700">Email Address</label>
           <input

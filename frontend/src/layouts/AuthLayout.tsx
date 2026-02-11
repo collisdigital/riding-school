@@ -19,7 +19,8 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         </div>
         <div>
           <blockquote className="text-3xl font-medium leading-tight">
-            "This platform has completely transformed how we manage our riders' progress. It's simple, professional, and effective."
+            "This platform has completely transformed how we manage our riders' progress. It's
+            simple, professional, and effective."
           </blockquote>
           <div className="mt-6 flex items-center space-x-4">
             <div className="w-12 h-12 rounded-full bg-blue-400" />

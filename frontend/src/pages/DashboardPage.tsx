@@ -5,7 +5,7 @@ import axios from 'axios'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const [riders, setRiders] = useState<{id: string, first_name: string}[]>([])
+  const [riders, setRiders] = useState<{ id: string; first_name: string }[]>([])
   const [schoolName, setSchoolName] = useState('Loading...')
   const [newRiderName, setNewRiderName] = useState('')
 
@@ -17,17 +17,19 @@ export default function DashboardPage() {
         // For now, let's assume we can get it from the user info or another call.
         // I will add a simple /api/auth/me to get the user and school info.
         const userRes = await axios.get('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
         if (userRes.data.school) {
           setSchoolName(userRes.data.school.name)
         }
 
         const ridersRes = await axios.get('/api/riders/', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
         setRiders(ridersRes.data)
-      } catch (err) {}
+      } catch {
+        // ignore
+      }
     }
     fetchData()
   }, [])
@@ -36,13 +38,16 @@ export default function DashboardPage() {
     e.preventDefault()
     try {
       const token = localStorage.getItem('token')
-      const res = await axios.post('/api/riders/', 
+      const res = await axios.post(
+        '/api/riders/',
         { first_name: newRiderName, last_name: 'Rider' },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       )
       setRiders([...riders, res.data])
       setNewRiderName('')
-    } catch (err) {}
+    } catch {
+      // ignore
+    }
   }
 
   const handleLogout = () => {
@@ -73,7 +78,7 @@ export default function DashboardPage() {
           </div>
         </nav>
         <div className="p-4 border-t border-gray-100">
-          <button 
+          <button
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 p-3 text-gray-600 hover:text-red-600 transition font-medium"
           >
@@ -94,15 +99,21 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">Total Riders</div>
+            <div className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">
+              Total Riders
+            </div>
             <div className="text-4xl font-bold text-gray-900">{riders.length}</div>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">Active Grades</div>
+            <div className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">
+              Active Grades
+            </div>
             <div className="text-4xl font-bold text-gray-900">5</div>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">Pending Graduations</div>
+            <div className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">
+              Pending Graduations
+            </div>
             <div className="text-4xl font-bold text-gray-900">0</div>
           </div>
         </div>
@@ -111,15 +122,18 @@ export default function DashboardPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <h2 className="text-xl font-bold mb-6">Add Rider</h2>
             <form onSubmit={handleAddRider} className="space-y-4">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Rider First Name"
                 className="w-full border border-gray-300 rounded-lg p-3"
                 value={newRiderName}
                 onChange={(e) => setNewRiderName(e.target.value)}
                 required
               />
-              <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg">
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg"
+              >
                 Add Rider
               </button>
             </form>
@@ -131,8 +145,11 @@ export default function DashboardPage() {
               <p className="text-gray-500 italic">No riders added yet.</p>
             ) : (
               <ul className="space-y-3">
-                {riders.map(rider => (
-                  <li key={rider.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                {riders.map((rider) => (
+                  <li
+                    key={rider.id}
+                    className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
+                  >
                     <Users className="w-5 h-5 text-blue-500" />
                     <span className="font-medium text-gray-900">{rider.first_name}</span>
                   </li>
