@@ -25,10 +25,10 @@ jobs:
         run: ruff check .
       - name: Check formatting with Ruff
         run: ruff format --check .
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           export PYTHONPATH=.
-          pytest
+          pytest --cov=app --cov-report=term-missing
 
   frontend:
     runs-on: ubuntu-latest
@@ -49,8 +49,8 @@ jobs:
         run: npx prettier --check .
       - name: Lint
         run: npm run lint
-      - name: Run tests
-        run: npm run test -- --run
+      - name: Run tests with coverage
+        run: npm run test -- --coverage --run
 
   e2e:
     needs: [backend, frontend]
