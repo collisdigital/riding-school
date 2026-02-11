@@ -1,15 +1,20 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { expect, test, vi, beforeEach } from 'vitest'
+import { expect, test, vi, beforeEach, type Mocked } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 import RegisterPage from './RegisterPage'
 import axios from 'axios'
 
 vi.mock('axios')
-const mockedAxios = axios as vi.Mocked<typeof axios>
+const mockedAxios = axios as Mocked<typeof axios>
 
 // Helper to check if an element is axios error mock compatible
-mockedAxios.isAxiosError.mockImplementation((payload) => {
-  return payload && payload.isAxiosError === true
+mockedAxios.isAxiosError.mockImplementation((payload: unknown) => {
+  return (
+    payload !== null &&
+    typeof payload === 'object' &&
+    'isAxiosError' in payload &&
+    (payload as { isAxiosError: unknown }).isAxiosError === true
+  )
 })
 
 const renderRegisterPage = () => {

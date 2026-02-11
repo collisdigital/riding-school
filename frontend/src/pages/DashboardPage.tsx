@@ -5,9 +5,10 @@ import axios from 'axios'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const [riders, setRiders] = useState<{ id: string; first_name: string }[]>([])
+  const [riders, setRiders] = useState<{ id: string; first_name: string; last_name: string }[]>([])
   const [schoolName, setSchoolName] = useState('Loading...')
-  const [newRiderName, setNewRiderName] = useState('')
+  const [newRiderFirstName, setNewRiderFirstName] = useState('')
+  const [newRiderLastName, setNewRiderLastName] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,11 +41,12 @@ export default function DashboardPage() {
       const token = localStorage.getItem('token')
       const res = await axios.post(
         '/api/riders/',
-        { first_name: newRiderName, last_name: 'Rider' },
+        { first_name: newRiderFirstName, last_name: newRiderLastName },
         { headers: { Authorization: `Bearer ${token}` } },
       )
       setRiders([...riders, res.data])
-      setNewRiderName('')
+      setNewRiderFirstName('')
+      setNewRiderLastName('')
     } catch {
       // ignore
     }
@@ -126,8 +128,16 @@ export default function DashboardPage() {
                 type="text"
                 placeholder="Rider First Name"
                 className="w-full border border-gray-300 rounded-lg p-3"
-                value={newRiderName}
-                onChange={(e) => setNewRiderName(e.target.value)}
+                value={newRiderFirstName}
+                onChange={(e) => setNewRiderFirstName(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Rider Last Name"
+                className="w-full border border-gray-300 rounded-lg p-3"
+                value={newRiderLastName}
+                onChange={(e) => setNewRiderLastName(e.target.value)}
                 required
               />
               <button
@@ -151,7 +161,9 @@ export default function DashboardPage() {
                     className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
                   >
                     <Users className="w-5 h-5 text-blue-500" />
-                    <span className="font-medium text-gray-900">{rider.first_name}</span>
+                    <span className="font-medium text-gray-900">
+                      {rider.first_name} {rider.last_name}
+                    </span>
                   </li>
                 ))}
               </ul>
