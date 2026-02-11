@@ -19,8 +19,8 @@ async def test_login_sets_cookie():
                 "email": "test@example.com",
                 "password": "strongpassword123",
                 "first_name": "Test",
-                "last_name": "User"
-            }
+                "last_name": "User",
+            },
         )
 
         # Then login
@@ -29,11 +29,12 @@ async def test_login_sets_cookie():
     assert response.status_code == 200
     assert "access_token" in response.cookies
     assert response.cookies.get("access_token") is not None
-    # Check for HttpOnly (httpx might not show all attributes in cookies dict 
+    # Check for HttpOnly (httpx might not show all attributes in cookies dict
     # easily but we can check headers)
     set_cookie = response.headers.get("set-cookie")
     assert "HttpOnly" in set_cookie
     assert "SameSite=lax" in set_cookie
+
 
 @pytest.mark.asyncio
 async def test_get_me_with_cookie():
@@ -50,8 +51,8 @@ async def test_get_me_with_cookie():
                 "email": "cookie@example.com",
                 "password": "password123",
                 "first_name": "Cookie",
-                "last_name": "User"
-            }
+                "last_name": "User",
+            },
         )
 
         # Login to get cookie
@@ -63,6 +64,7 @@ async def test_get_me_with_cookie():
 
     assert response.status_code == 200
     assert response.json()["email"] == "cookie@example.com"
+
 
 @pytest.mark.asyncio
 async def test_logout_clears_cookie():
@@ -79,8 +81,8 @@ async def test_logout_clears_cookie():
                 "email": "logout@example.com",
                 "password": "password123",
                 "first_name": "Logout",
-                "last_name": "User"
-            }
+                "last_name": "User",
+            },
         )
 
         # Login
