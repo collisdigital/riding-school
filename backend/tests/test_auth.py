@@ -13,7 +13,7 @@ async def test_register_user_success():
             "/api/auth/register",
             json={
                 "email": "test@example.com",
-                "password": "strongpassword123",
+                "password": "StrongPass1!",
                 "first_name": "Test",
                 "last_name": "User",
             },
@@ -29,7 +29,7 @@ async def test_register_user_success():
 async def test_register_duplicate_email():
     payload = {
         "email": "dup@example.com",
-        "password": "password123",
+        "password": "StrongPass1!",
         "first_name": "Dup",
         "last_name": "User",
     }
@@ -50,7 +50,7 @@ async def test_password_is_hashed(db_session):
     from app.models.user import User
 
     email = "hashed@example.com"
-    password = "secretpassword"
+    password = "StrongPass1!"
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -68,3 +68,20 @@ async def test_password_is_hashed(db_session):
     assert user is not None
     assert user.hashed_password != password
     assert security.verify_password(password, user.hashed_password)
+
+
+@pytest.mark.asyncio
+async def test_register_weak_password():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.post(
+            "/api/auth/register",
+            json={
+                "email": "weak@example.com",
+                "password": "weak",
+                "first_name": "Weak",
+                "last_name": "Pass",
+            },
+        )
+    # Expect 422 Unprocessable Entity because validation should fail
+    assert response.status_code == 422
