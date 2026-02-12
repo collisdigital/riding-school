@@ -15,6 +15,7 @@ def count_queries(db_session):
         def __init__(self):
             self.count = 0
             self.statements = []
+
         def __call__(self, conn, cursor, statement, parameters, context, executemany):
             self.count += 1
             self.statements.append(statement)
@@ -24,12 +25,13 @@ def count_queries(db_session):
     yield counter
     event.remove(db_session.bind, "before_cursor_execute", counter)
 
+
 @pytest.mark.asyncio
 async def test_get_children_n_plus_one(db_session, count_queries):
     # Setup School
     school = School(name="Performance School", slug="perf")
     db_session.add(school)
-    db_session.commit() # Commit to get ID
+    db_session.commit()  # Commit to get ID
 
     # Create Parent
     pw = security.get_password_hash("password123")
@@ -99,6 +101,6 @@ async def test_get_children_n_plus_one(db_session, count_queries):
         # 3. Roles query (selectinload)
         # 4. Permissions query (selectinload)
         # Total should be <= 5 queries. Without optimization it was 13.
-        assert count_queries.count <= 5, (
-            f"Query count is {count_queries.count}, expected <= 5"
-        )
+        assert (
+            count_queries.count <= 5
+        ), f"Query count is {count_queries.count}, expected <= 5"
