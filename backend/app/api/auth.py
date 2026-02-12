@@ -6,11 +6,13 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.core.ratelimit import RateLimiter
 from app.db import get_db
 from app.models.user import User
 from app.schemas import Token, UserCreate, UserSchema, UserWithSchool
 
 router = APIRouter()
+login_limiter = RateLimiter(requests_limit=5, time_window=60)
 
 
 @router.get("/me", response_model=UserWithSchool)
@@ -43,7 +45,9 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     return db_obj
 
 
-@router.post("/login", response_model=Token)
+@router.post(
+    "/login", response_model=Token, dependencies=[Depends(login_limiter)]
+)
 def login(
     response: Response,
     db: Session = Depends(get_db),
