@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager, selectinload
 
 from app.api import deps
 from app.db import get_db
-from app.models.rbac import Relationship
+from app.models.rbac import Relationship, Role
 from app.models.user import User
 from app.schemas import UserSchema
 
@@ -17,9 +17,15 @@ def get_children(
     current_user: User = Depends(deps.get_current_active_school_user),
 ):
     # Fetch all riders linked to this parent
+    # Bolt: Eager load rider, roles, and permissions to avoid N+1 query problem
     relationships = (
         db.query(Relationship)
         .join(User, Relationship.rider)
+        .options(
+            contains_eager(Relationship.rider)
+            .selectinload(User.roles)
+            .selectinload(Role.permissions)
+        )
         .filter(
             Relationship.parent_id == current_user.id,
             User.school_id == current_user.school_id,
