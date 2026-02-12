@@ -45,9 +45,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     return db_obj
 
 
-@router.post(
-    "/login", response_model=Token, dependencies=[Depends(login_limiter)]
-)
+@router.post("/login", response_model=Token, dependencies=[Depends(login_limiter)])
 def login(
     response: Response,
     db: Session = Depends(get_db),

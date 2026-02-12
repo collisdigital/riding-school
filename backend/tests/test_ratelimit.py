@@ -28,7 +28,10 @@ async def test_rate_limiter_blocks_excessive_requests():
         )
         # Expect 429 Too Many Requests
         assert response.status_code == 429
-        assert response.json()["detail"] == "Too many login attempts. Please try again later."
+        assert (
+            response.json()["detail"]
+            == "Too many login attempts. Please try again later."
+        )
 
     # Cleanup
     login_limiter.requests.clear()
