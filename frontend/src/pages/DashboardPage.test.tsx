@@ -5,14 +5,18 @@ import { BrowserRouter } from 'react-router-dom'
 import axios from 'axios'
 
 vi.mock('axios')
-const mockedAxios = axios as unknown as { get: ReturnType<typeof vi.fn>, post: ReturnType<typeof vi.fn> }
+const mockedAxios = axios as unknown as {
+  get: ReturnType<typeof vi.fn>
+  post: ReturnType<typeof vi.fn>
+}
 
 describe('DashboardPage', () => {
   beforeEach(() => {
     mockedAxios.get.mockImplementation((url: string) => {
-        if (url === '/api/auth/me') return Promise.resolve({ data: { school: { name: 'Test School' } } })
-        if (url === '/api/riders/') return Promise.resolve({ data: [] })
-        return Promise.reject(new Error('not found'))
+      if (url === '/api/auth/me')
+        return Promise.resolve({ data: { school: { name: 'Test School' } } })
+      if (url === '/api/riders/') return Promise.resolve({ data: [] })
+      return Promise.reject(new Error('not found'))
     })
     mockedAxios.post.mockResolvedValue({ data: {} })
   })
