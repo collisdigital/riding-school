@@ -64,8 +64,8 @@ test('multi-tenant leak test', async ({ browser }) => {
   await pageB.waitForURL('/dashboard');
 
   // Context A: Add a rider "Thunder Horse"
-  await pageA.fill('input[placeholder="Rider First Name"]', 'Thunder');
-  await pageA.fill('input[placeholder="Rider Last Name"]', 'Horse');
+  await pageA.fill('input#rider-first-name', 'Thunder');
+  await pageA.fill('input#rider-last-name', 'Horse');
   await pageA.click('button:text("Add Rider")');
   await expect(pageA.locator('text=Thunder Horse')).toBeVisible();
 
@@ -74,8 +74,8 @@ test('multi-tenant leak test', async ({ browser }) => {
   await expect(pageB.locator('text=No riders added yet.')).toBeVisible();
 
   // Context B: Add a rider "Lightning Flash"
-  await pageB.fill('input[placeholder="Rider First Name"]', 'Lightning');
-  await pageB.fill('input[placeholder="Rider Last Name"]', 'Flash');
+  await pageB.fill('input#rider-first-name', 'Lightning');
+  await pageB.fill('input#rider-last-name', 'Flash');
   await pageB.click('button:text("Add Rider")');
   await expect(pageB.locator('text=Lightning Flash')).toBeVisible();
 
