@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.api.auth import login_limiter
 from app.core.seed import seed_rbac
 from app.db import Base, get_db
 from app.main import app
@@ -23,6 +24,13 @@ def setup_test_db():
     db.close()
     yield
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(autouse=True)
+def clear_rate_limit():
+    login_limiter.requests.clear()
+    yield
+    login_limiter.requests.clear()
 
 
 @pytest.fixture
