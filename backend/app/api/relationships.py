@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, contains_eager, selectinload
+from sqlalchemy.orm import Session, contains_eager
 
 from app.api import deps
 from app.db import get_db

@@ -1,11 +1,13 @@
 import pytest
-from sqlalchemy import event
 from httpx import ASGITransport, AsyncClient
-from app.main import app
+from sqlalchemy import event
+
 from app.core import security
-from app.models.user import User
+from app.main import app
+from app.models.rbac import Permission, Relationship, Role
 from app.models.school import School
-from app.models.rbac import Relationship, Role, Permission
+from app.models.user import User
+
 
 @pytest.fixture
 def count_queries(db_session):
@@ -97,4 +99,6 @@ async def test_get_children_n_plus_one(db_session, count_queries):
         # 3. Roles query (selectinload)
         # 4. Permissions query (selectinload)
         # Total should be <= 5 queries. Without optimization it was 13.
-        assert count_queries.count <= 5, f"Query count is {count_queries.count}, expected <= 5"
+        assert count_queries.count <= 5, (
+            f"Query count is {count_queries.count}, expected <= 5"
+        )
