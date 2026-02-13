@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
@@ -29,14 +30,16 @@ def count_queries(db_session):
 @pytest.mark.asyncio
 async def test_get_children_n_plus_one(db_session, count_queries):
     # Setup School
-    school = School(name="Performance School", slug="perf")
+    school_slug = f"perf-{uuid.uuid4()}"
+    school = School(name="Performance School", slug=school_slug)
     db_session.add(school)
     db_session.commit()  # Commit to get ID
 
     # Create Parent
     pw = security.get_password_hash("password123")
+    parent_email = f"parent_perf_{uuid.uuid4()}@test.com"
     parent = User(
-        email="parent_perf@test.com",
+        email=parent_email,
         hashed_password=pw,
         first_name="Parent",
         last_name="Perf",
@@ -46,8 +49,8 @@ async def test_get_children_n_plus_one(db_session, count_queries):
     db_session.commit()
 
     # Create Role and Permission to trigger nested N+1 if any
-    perm = Permission(name="test:perm", description="Test Permission")
-    role = Role(name="TestRole", description="Test Role")
+    perm = Permission(name=f"test:perm:{uuid.uuid4()}", description="Test Permission")
+    role = Role(name=f"TestRole:{uuid.uuid4()}", description="Test Role")
     role.permissions.append(perm)
     db_session.add_all([perm, role])
     db_session.commit()
@@ -56,7 +59,7 @@ async def test_get_children_n_plus_one(db_session, count_queries):
     children = []
     for i in range(5):
         child = User(
-            email=f"child_{i}@test.com",
+            email=f"child_{i}_{uuid.uuid4()}@test.com",
             hashed_password=pw,
             first_name=f"Child{i}",
             last_name="Perf",
@@ -80,7 +83,7 @@ async def test_get_children_n_plus_one(db_session, count_queries):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         login_res = await ac.post(
             "/api/auth/login",
-            data={"username": "parent_perf@test.com", "password": "password123"},
+            data={"username": parent_email, "password": "password123"},
         )
         token = login_res.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
