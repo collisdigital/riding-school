@@ -54,6 +54,28 @@ def get_current_user(
         .options(
             joinedload(User.school),
             joinedload(User.roles).joinedload(Role.permissions),
+        )
+        .filter(User.id == user_id)
+        .first()
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+def get_current_user_with_permissions(
+    db: Session = Depends(get_db), token_data: TokenPayload = Depends(get_token_payload)
+) -> User:
+    try:
+        user_id = uuid.UUID(token_data.sub)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid token subject") from None
+
+    user = (
+        db.query(User)
+        .options(
+            joinedload(User.school),
+            joinedload(User.roles).joinedload(Role.permissions),
             joinedload(User.permission_overrides).joinedload(
                 UserPermissionOverride.permission
             ),
@@ -98,7 +120,9 @@ def get_user_permissions(user: User) -> set:
 
 
 def check_permissions(required_permissions: list[str]):
-    def permission_checker(current_user: User = Depends(get_current_user)) -> User:
+    def permission_checker(
+        current_user: User = Depends(get_current_user_with_permissions),
+    ) -> User:
         user_perms = get_user_permissions(current_user)
         for perm in required_permissions:
             if perm not in user_perms:
