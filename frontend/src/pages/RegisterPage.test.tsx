@@ -44,7 +44,7 @@ test('renders registration form and password requirements', () => {
 test('updates password requirement indicators as user types', async () => {
   renderRegisterPage()
 
-  const passwordInput = screen.getByLabelText(/Password/i)
+  const passwordInput = screen.getByLabelText('Password', { selector: 'input' })
 
   // Initially all should be in gray/inactive state
   expect(screen.getByText(/At least 8 characters/i)).toHaveClass('text-gray-500')
@@ -77,7 +77,9 @@ test('handles 422 error response from backend', async () => {
   fireEvent.change(screen.getByLabelText(/Email Address/i), {
     target: { value: 'test@example.com' },
   })
-  fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'weak' } })
+  fireEvent.change(screen.getByLabelText('Password', { selector: 'input' }), {
+    target: { value: 'weak' },
+  })
 
   fireEvent.click(screen.getByRole('button', { name: /Create Account/i }))
 
@@ -97,7 +99,9 @@ test('successfully registers and redirects', async () => {
   fireEvent.change(screen.getByLabelText(/Email Address/i), {
     target: { value: 'test@example.com' },
   })
-  fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'StrongPass1!' } })
+  fireEvent.change(screen.getByLabelText('Password', { selector: 'input' }), {
+    target: { value: 'StrongPass1!' },
+  })
 
   fireEvent.click(screen.getByRole('button', { name: /Create Account/i }))
 
