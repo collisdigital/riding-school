@@ -1,4 +1,5 @@
 import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
@@ -81,5 +82,9 @@ async def test_get_me_query_optimization(db_session, count_queries):
         # Check assertions
         assert count_queries.count == 1, f"Expected 1 query, got {count_queries.count}"
 
-        found_override_join = any("user_permission_overrides" in stmt for stmt in count_queries.statements)
-        assert not found_override_join, "Query should not join user_permission_overrides for get_me"
+        found_override_join = any(
+            "user_permission_overrides" in stmt for stmt in count_queries.statements
+        )
+        assert (
+            not found_override_join
+        ), "Query should not join user_permission_overrides for get_me"
