@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from .api import auth, relationships, riders, schools
 from .core.config import settings
+from .core.middleware import SecurityHeadersMiddleware
 from .core.seed import seed_rbac
 from .db import Base, SessionLocal, engine, get_db
 
@@ -27,6 +28,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(schools.router, prefix="/api/schools", tags=["schools"])
