@@ -58,12 +58,12 @@ test.describe('Riders Management E2E', () => {
     await row.getByTitle('Edit').click();
 
     await expect(page.getByText('Edit Rider')).toBeVisible();
-    await page.getByDisplayValue('Alice').fill('Alicia');
+    await page.locator('input[value="Alice"]').fill('Alicia');
     await page.getByRole('button', { name: 'Update Rider' }).click();
 
     // Verify Edit
     await expect(page.getByText('Alicia Wonderland')).toBeVisible();
-    await expect(page.queryByText('Alice Wonderland')).toBeNull();
+    await expect(page.locator('text=Alice Wonderland')).not.toBeVisible();
 
     // 7. Delete Rider
     // Mock dialog before click
@@ -73,7 +73,7 @@ test.describe('Riders Management E2E', () => {
     await rowEdited.getByTitle('Delete').click();
 
     // Verify Deleted
-    await expect(page.queryByText('Alicia Wonderland')).toBeNull();
+    await expect(page.locator('text=Alicia Wonderland')).not.toBeVisible();
   });
 
 });

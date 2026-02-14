@@ -258,10 +258,13 @@ export default function RidersPage() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">First Name</label>
+                  <label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                    First Name
+                  </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                     <input
+                      id="firstName"
                       type="text"
                       required
                       className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -272,10 +275,13 @@ export default function RidersPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Last Name</label>
+                  <label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                     <input
+                      id="lastName"
                       type="text"
                       required
                       className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -288,12 +294,13 @@ export default function RidersPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="text-sm font-medium text-gray-700">
                   Email Address (Optional)
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                   <input
+                    id="email"
                     type="email"
                     className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                     placeholder="jane@example.com"
@@ -309,10 +316,13 @@ export default function RidersPage() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Height (cm)</label>
+                  <label htmlFor="height" className="text-sm font-medium text-gray-700">
+                    Height (cm)
+                  </label>
                   <div className="relative">
                     <Ruler className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                     <input
+                      id="height"
                       type="number"
                       step="0.1"
                       className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -323,10 +333,13 @@ export default function RidersPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Weight (kg)</label>
+                  <label htmlFor="weight" className="text-sm font-medium text-gray-700">
+                    Weight (kg)
+                  </label>
                   <div className="relative">
                     <Weight className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                     <input
+                      id="weight"
                       type="number"
                       step="0.1"
                       className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -337,10 +350,13 @@ export default function RidersPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Date of Birth</label>
+                  <label htmlFor="dob" className="text-sm font-medium text-gray-700">
+                    Date of Birth
+                  </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                     <input
+                      id="dob"
                       type="date"
                       className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                       value={dob}
