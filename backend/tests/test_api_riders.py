@@ -132,7 +132,8 @@ async def test_rider_crud_and_isolation(db_session, school_and_admin):
         # Assign Admin Role to other user
         admin_role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
         mem_role_other = MembershipRole(
-            membership_id=other_mem.id, role_id=admin_role.id
+            membership_id=other_mem.id,
+            role_id=admin_role.id,
         )
         db_session.add(mem_role_other)
 
@@ -231,7 +232,7 @@ async def test_rider_create_existing_user_link(db_session, school_and_admin):
         res = await ac.post(
             "/api/riders/",
             json={
-                "first_name": "Existing",  # Can match or differ? System should use existing user?
+                "first_name": "Existing",
                 "last_name": "User",
                 "email": email,
                 "height_cm": 180.0,

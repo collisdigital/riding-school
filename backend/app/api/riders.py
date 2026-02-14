@@ -208,6 +208,27 @@ def get_rider(
     )
 
 
+def _update_user_fields(db: Session, user: User, rider_in: RiderUpdate) -> None:
+    if rider_in.first_name is not None:
+        user.first_name = rider_in.first_name
+    if rider_in.last_name is not None:
+        user.last_name = rider_in.last_name
+    if rider_in.email is not None and user.email != rider_in.email:
+        existing = db.query(User).filter(User.email == rider_in.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+        user.email = rider_in.email
+
+
+def _update_profile_fields(profile: RiderProfile, rider_in: RiderUpdate) -> None:
+    if rider_in.height_cm is not None:
+        profile.height_cm = rider_in.height_cm
+    if rider_in.weight_kg is not None:
+        profile.weight_kg = rider_in.weight_kg
+    if rider_in.date_of_birth is not None:
+        profile.date_of_birth = rider_in.date_of_birth
+
+
 @router.put("/{rider_id}", response_model=RiderResponse)
 def update_rider(
     rider_id: str,
@@ -231,27 +252,8 @@ def update_rider(
     if not profile:
         raise HTTPException(status_code=404, detail="Rider not found")
 
-    # Update User fields if provided
-    user = profile.user
-    if rider_in.first_name is not None:
-        user.first_name = rider_in.first_name
-    if rider_in.last_name is not None:
-        user.last_name = rider_in.last_name
-    if rider_in.email is not None:
-        # Check uniqueness if email changed
-        if user.email != rider_in.email:
-            existing = db.query(User).filter(User.email == rider_in.email).first()
-            if existing:
-                raise HTTPException(status_code=400, detail="Email already in use")
-        user.email = rider_in.email
-
-    # Update Profile fields
-    if rider_in.height_cm is not None:
-        profile.height_cm = rider_in.height_cm
-    if rider_in.weight_kg is not None:
-        profile.weight_kg = rider_in.weight_kg
-    if rider_in.date_of_birth is not None:
-        profile.date_of_birth = rider_in.date_of_birth
+    _update_user_fields(db, profile.user, rider_in)
+    _update_profile_fields(profile, rider_in)
 
     try:
         db.commit()
@@ -263,9 +265,9 @@ def update_rider(
     return RiderResponse(
         id=profile.id,
         user_id=profile.user_id,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        email=user.email,
+        first_name=profile.user.first_name,
+        last_name=profile.user.last_name,
+        email=profile.user.email,
         height_cm=profile.height_cm,
         weight_kg=profile.weight_kg,
         date_of_birth=profile.date_of_birth,
@@ -300,7 +302,6 @@ def delete_rider(
     profile.deleted_at = func.now()
 
     # Soft delete Membership (if exists and exclusive to rider role?)
-    # Prompt said: "soft-delete the Rider Profile and the Membership for that school simultaneously"
     membership = (
         db.query(Membership)
         .filter(

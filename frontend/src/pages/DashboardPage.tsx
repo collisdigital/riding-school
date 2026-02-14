@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { RiderResponse } from '../types'
+import type { RiderResponse } from '../types'
 
 export default function DashboardPage() {
   const [riders, setRiders] = useState<RiderResponse[]>([])

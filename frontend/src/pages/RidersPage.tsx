@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react'
-import {
-  Search,
-  Plus,
-  Edit2,
-  Trash2,
-  X,
-  User,
-  Ruler,
-  Weight,
-  Calendar,
-  Mail,
-} from 'lucide-react'
+import { Search, Plus, Edit2, Trash2, X, User, Ruler, Weight, Calendar, Mail } from 'lucide-react'
 import axios from 'axios'
-import { RiderResponse } from '../types'
+import type { RiderResponse } from '../types'
 
 export default function RidersPage() {
   const [riders, setRiders] = useState<RiderResponse[]>([])

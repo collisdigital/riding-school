@@ -77,9 +77,6 @@ def get_current_user(
             .first()
         )
         if not membership:
-            # Token has school_id but user not a member? Invalid context.
-            # But maybe they were removed. Fallback or error?
-            # For strictness:
             raise HTTPException(status_code=403, detail="Not a member of this school")
     else:
         # No school in token (e.g. first login, or global admin?)
@@ -105,8 +102,6 @@ def get_current_user(
         user.school_id = None
         user.school = None
         user.roles = []
-        # If user has no memberships, they are effectively a "global" user with no school context.
-        # Most endpoints require school context.
 
     return user
 
@@ -116,7 +111,8 @@ def get_current_active_school_user(
 ) -> User:
     if not getattr(current_user, "school_id", None):
         raise HTTPException(
-            status_code=400, detail="User is not associated with any school context"
+            status_code=400,
+            detail="User is not associated with any school context",
         )
     return current_user
 
@@ -137,7 +133,8 @@ def check_permissions(required_permissions: list[str]):
 
         # TODO: Implement granular permissions if needed.
         # For now, we assume if you are an Admin, you pass.
-        # If you are not an Admin, we might reject for delete/create actions unless allowed.
+        # If you are not an Admin, we might reject for delete/create actions
+        # unless allowed.
 
         # Mapping (Mock)
         allowed = set()
