@@ -15,7 +15,7 @@ test.describe('Riders Management E2E', () => {
     await page.getByLabel('First Name').fill('E2E');
     await page.getByLabel('Last Name').fill('User');
     await page.getByLabel('Email Address').fill(email);
-    await page.getByLabel('Password').fill(password);
+    await page.getByLabel('Password', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Create Account' }).click();
 
     // 2. Onboarding: Create School
