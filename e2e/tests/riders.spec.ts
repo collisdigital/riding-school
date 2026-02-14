@@ -20,7 +20,7 @@ test.describe('Riders Management E2E', () => {
 
     // 2. Onboarding: Create School
     await expect(page).toHaveURL(/.*\/onboarding\/create-school/);
-    await page.getByPlaceholder('e.g. Willow Creek Riding School').fill(schoolName);
+    await page.getByPlaceholder('e.g. Willow Creek Equestrian').fill(schoolName);
     await page.getByRole('button', { name: 'Create School' }).click();
 
     // 3. Dashboard
