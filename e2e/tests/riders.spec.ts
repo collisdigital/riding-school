@@ -35,14 +35,13 @@ test.describe('Riders Management E2E', () => {
     await page.getByRole('button', { name: 'Add Rider' }).click();
     await expect(page.getByText('Add New Rider')).toBeVisible();
 
-    await page.getByPlaceholder('Jane').fill('Alice');
-    await page.getByPlaceholder('Doe').fill('Wonderland');
-    await page.getByPlaceholder('jane@example.com').fill(`alice_${timestamp}@example.com`);
-    await page.getByPlaceholder('165').fill('160'); // Height
-    await page.getByPlaceholder('60').fill('50');   // Weight
+    await page.getByLabel('First Name').fill('Alice');
+    await page.getByLabel('Last Name').fill('Wonderland');
+    await page.getByLabel('Email Address').fill(`alice_${timestamp}@example.com`);
+    await page.getByLabel('Height (cm)').fill('160');
+    await page.getByLabel('Weight (kg)').fill('50');
     // Date of Birth
-    // Playwright handling of date inputs can be tricky, try typing
-    await page.locator('input[type="date"]').fill('2010-01-01');
+    await page.getByLabel('Date of Birth').fill('2010-01-01');
 
     await page.getByRole('button', { name: 'Create Rider' }).click();
 
