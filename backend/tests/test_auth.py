@@ -5,6 +5,8 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core import security
 from app.main import app
+from app.models.membership import Membership, MembershipRole
+from app.models.role import Role
 from app.models.school import School
 from app.models.user import User
 
@@ -86,9 +88,26 @@ async def test_get_me_success(db_session):
         hashed_password=security.get_password_hash("password123"),
         first_name="Me",
         last_name="Test",
-        school_id=school.id,
+        is_active=True,
     )
     db_session.add(user)
+    db_session.flush()
+
+    # Create Membership
+    membership = Membership(user_id=user.id, school_id=school.id)
+    db_session.add(membership)
+    db_session.flush()
+
+    # Assign Role? Not strictly needed for get_me but good practice
+    role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
+    if not role:
+         role = Role(name=Role.ADMIN)
+         db_session.add(role)
+         db_session.flush()
+
+    mem_role = MembershipRole(membership_id=membership.id, role_id=role.id)
+    db_session.add(mem_role)
+
     db_session.commit()
 
     # 2. Get token

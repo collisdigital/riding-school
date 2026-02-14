@@ -3,6 +3,8 @@ from httpx import ASGITransport, AsyncClient
 
 from app.core import security
 from app.main import app
+from app.models.membership import Membership
+from app.models.school import School
 from app.models.user import User
 
 
@@ -16,6 +18,7 @@ async def test_create_school_success(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="No",
         last_name="School",
+        is_active=True,
     )
     db_session.add(user)
     db_session.commit()
@@ -35,7 +38,7 @@ async def test_create_school_success(db_session):
             headers={"Authorization": f"Bearer {token}"},
         )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     data = response.json()
     assert data["name"] == "New School"
     assert "slug" in data
@@ -45,8 +48,6 @@ async def test_create_school_success(db_session):
 @pytest.mark.asyncio
 async def test_create_school_already_has_one(db_session):
     # 1. Setup: Create a user with a school
-    from app.models.school import School
-
     school = School(name="Existing", slug="existing")
     db_session.add(school)
     db_session.flush()
@@ -58,9 +59,13 @@ async def test_create_school_already_has_one(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="Has",
         last_name="School",
-        school_id=school.id,
+        is_active=True,
     )
     db_session.add(user)
+    db_session.flush()
+
+    membership = Membership(user_id=user.id, school_id=school.id)
+    db_session.add(membership)
     db_session.commit()
 
     transport = ASGITransport(app=app)
@@ -77,7 +82,7 @@ async def test_create_school_already_has_one(db_session):
         )
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "User already belongs to a school"
+    assert response.json()["detail"] == "User already belongs to a school context"
 
 
 @pytest.mark.asyncio
@@ -91,12 +96,14 @@ async def test_create_school_duplicate_slug(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="U1",
         last_name="T",
+        is_active=True,
     )
     u2 = User(
         email=email2,
         hashed_password=security.get_password_hash(password),
         first_name="U2",
         last_name="T",
+        is_active=True,
     )
     db_session.add_all([u1, u2])
     db_session.commit()
@@ -108,11 +115,14 @@ async def test_create_school_duplicate_slug(db_session):
             "/api/auth/login", data={"username": email1, "password": password}
         )
         token1 = login1.json()["access_token"]
-        await ac.post(
+
+        # User 1 has no school yet, so they can create one
+        resp1 = await ac.post(
             "/api/schools/",
             json={"name": "Willow Creek"},
             headers={"Authorization": f"Bearer {token1}"},
         )
+        assert resp1.status_code == 200
 
         # User 2 creates "Willow Creek"
         login2 = await ac.post(

@@ -1,50 +1,24 @@
-import uuid
-
-from sqlalchemy import Column, ForeignKey, String
+import uuid6
+from sqlalchemy import Column, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Uuid
 
-from .base import Base, TimestampMixin
-from .rbac import user_roles
+from .base import Base, TimestampMixin, SoftDeleteMixin
 
 
 class User(Base, TimestampMixin):
     __tablename__ = "users"
 
-    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    id = Column(Uuid, primary_key=True, default=uuid6.uuid7)
+    email = Column(String, unique=True, index=True, nullable=True)
+    hashed_password = Column(String, nullable=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_superuser = Column(Boolean, default=False)
 
-    school_id = Column(
-        Uuid, ForeignKey("schools.id", ondelete="SET NULL"), nullable=True
-    )
-    school = relationship("School", back_populates="users")
-
-    # RBAC
-    roles = relationship("Role", secondary=user_roles, backref="users")
-    permission_overrides = relationship(
-        "UserPermissionOverride", backref="user", cascade="all, delete-orphan"
-    )
-
-    # Parent-Child Relationships
-    child_relationships = relationship(
-        "Relationship",
-        foreign_keys="Relationship.parent_id",
-        back_populates="parent",
-        cascade="all, delete-orphan",
-    )
-    parent_relationships = relationship(
-        "Relationship",
-        foreign_keys="Relationship.rider_id",
-        back_populates="rider",
-        cascade="all, delete-orphan",
-    )
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
+    memberships = relationship("Membership", back_populates="user", cascade="all, delete-orphan")
+    rider_profiles = relationship("RiderProfile", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(email='{self.email}')>"

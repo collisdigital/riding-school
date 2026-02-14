@@ -1,15 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+import uuid
+from datetime import timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.core.ratelimit import RateLimiter
 from app.db import get_db
+from app.models.membership import Membership
 from app.models.user import User
-from app.schemas import Token, UserCreate, UserSchema, UserWithSchool
+from app.schemas.token import Token
+from app.schemas.user import UserCreate, UserSchema, UserWithSchool
 
 router = APIRouter()
 login_limiter = RateLimiter(requests_limit=5, time_window=60)
@@ -34,6 +39,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         hashed_password=security.get_password_hash(user_in.password),
         first_name=user_in.first_name,
         last_name=user_in.last_name,
+        is_active=True,
     )
     db.add(db_obj)
     try:
@@ -57,7 +63,16 @@ def login(
     ):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
-    access_token = security.create_access_token(user.id, school_id=user.school_id)
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+
+    # Find school context
+    # If client sends X-School-ID header, we could use that.
+    # For now, default to the first membership found.
+    membership = db.query(Membership).filter(Membership.user_id == user.id).first()
+    school_id = membership.school_id if membership else None
+
+    access_token = security.create_access_token(user.id, school_id=school_id)
 
     response.set_cookie(
         key="access_token",
