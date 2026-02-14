@@ -1,6 +1,5 @@
-import uuid6
 from sqlalchemy import Column, DateTime, ForeignKey, event
-from sqlalchemy.orm import DeclarativeBase, declared_attr, Session, with_loader_criteria
+from sqlalchemy.orm import DeclarativeBase, Session, declared_attr, with_loader_criteria
 from sqlalchemy.sql import func
 from sqlalchemy.types import Uuid
 

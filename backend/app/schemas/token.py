@@ -1,6 +1,3 @@
-from typing import Optional
-from uuid import UUID
-
 from pydantic import BaseModel
 
 
@@ -10,5 +7,5 @@ class Token(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    sub: Optional[str] = None
-    school_id: Optional[str] = None
+    sub: str | None = None
+    school_id: str | None = None

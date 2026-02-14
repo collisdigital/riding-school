@@ -1,4 +1,5 @@
 import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -36,11 +37,13 @@ async def test_instructor_cannot_delete_rider(db_session):
     db_session.add(membership)
     db_session.flush()
 
-    instructor_role = db_session.query(Role).filter(Role.name == Role.INSTRUCTOR).first()
+    instructor_role = (
+        db_session.query(Role).filter(Role.name == Role.INSTRUCTOR).first()
+    )
     if not instructor_role:
-         instructor_role = Role(name=Role.INSTRUCTOR)
-         db_session.add(instructor_role)
-         db_session.flush()
+        instructor_role = Role(name=Role.INSTRUCTOR)
+        db_session.add(instructor_role)
+        db_session.flush()
 
     mem_role = MembershipRole(membership_id=membership.id, role_id=instructor_role.id)
     db_session.add(mem_role)
@@ -95,9 +98,9 @@ async def test_admin_can_delete_rider(db_session):
 
     admin_role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
     if not admin_role:
-         admin_role = Role(name=Role.ADMIN)
-         db_session.add(admin_role)
-         db_session.flush()
+        admin_role = Role(name=Role.ADMIN)
+        db_session.add(admin_role)
+        db_session.flush()
 
     mem_role = MembershipRole(membership_id=membership.id, role_id=admin_role.id)
     db_session.add(mem_role)

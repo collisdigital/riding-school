@@ -1,9 +1,9 @@
 import uuid6
-from sqlalchemy import Column, String, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Uuid
 
-from .base import Base, TimestampMixin, TenantMixin
+from .base import Base, TimestampMixin
 
 
 class Membership(Base, TimestampMixin):
@@ -15,7 +15,9 @@ class Membership(Base, TimestampMixin):
 
     user = relationship("User", back_populates="memberships")
     school = relationship("School", back_populates="memberships")
-    roles = relationship("MembershipRole", back_populates="membership", cascade="all, delete-orphan")
+    roles = relationship(
+        "MembershipRole", back_populates="membership", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (UniqueConstraint("user_id", "school_id", name="uq_user_school"),)
 

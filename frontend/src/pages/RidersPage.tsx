@@ -1,26 +1,20 @@
 import { useState, useEffect } from 'react'
 import {
-  Users,
   Search,
   Plus,
-  MoreVertical,
   Edit2,
   Trash2,
   X,
-  ChevronLeft,
-  ChevronRight,
   User,
   Ruler,
   Weight,
   Calendar,
   Mail,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { RiderResponse, RiderCreate, RiderUpdate } from '../types'
+import { RiderResponse } from '../types'
 
 export default function RidersPage() {
-  const navigate = useNavigate()
   const [riders, setRiders] = useState<RiderResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -129,7 +123,7 @@ export default function RidersPage() {
   }
 
   const filteredRiders = riders.filter((rider) =>
-    `${rider.first_name} ${rider.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${rider.first_name} ${rider.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   return (
@@ -305,7 +299,9 @@ export default function RidersPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">Email Address (Optional)</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Email Address (Optional)
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
                   <input
@@ -317,7 +313,8 @@ export default function RidersPage() {
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  Required if the rider needs to log in. Leave blank for managed profiles (e.g., children).
+                  Required if the rider needs to log in. Leave blank for managed profiles (e.g.,
+                  children).
                 </p>
               </div>
 

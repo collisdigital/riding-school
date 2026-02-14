@@ -1,9 +1,8 @@
 import uuid
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
 from app.api import deps
@@ -43,14 +42,16 @@ def create_rider(
             first_name=rider_in.first_name,
             last_name=rider_in.last_name,
             is_active=True,
-            hashed_password=None, # Managed or Invited later
+            hashed_password=None,  # Managed or Invited later
         )
         db.add(user)
         try:
             db.flush()
         except IntegrityError:
             db.rollback()
-            raise HTTPException(status_code=400, detail="User with this email already exists") from None
+            raise HTTPException(
+                status_code=400, detail="User with this email already exists"
+            ) from None
 
     # 2. Check/Create Membership
     membership = (
@@ -75,7 +76,10 @@ def create_rider(
     # Check if role already assigned
     has_role = (
         db.query(MembershipRole)
-        .filter(MembershipRole.membership_id == membership.id, MembershipRole.role_id == rider_role.id)
+        .filter(
+            MembershipRole.membership_id == membership.id,
+            MembershipRole.role_id == rider_role.id,
+        )
         .first()
     )
     if not has_role:
@@ -97,7 +101,7 @@ def create_rider(
         profile.date_of_birth = rider_in.date_of_birth
         # Reactivate if soft deleted?
         if profile.deleted_at:
-             profile.deleted_at = None
+            profile.deleted_at = None
     else:
         profile = RiderProfile(
             user_id=user.id,
@@ -112,7 +116,9 @@ def create_rider(
         db.commit()
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create rider: {str(e)}") from None
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create rider: {str(e)}"
+        ) from None
 
     db.refresh(profile)
 
@@ -130,7 +136,7 @@ def create_rider(
     )
 
 
-@router.get("/", response_model=List[RiderResponse])
+@router.get("/", response_model=list[RiderResponse])
 def list_riders(
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_active_school_user),
@@ -151,17 +157,19 @@ def list_riders(
     # Map to schema
     results = []
     for p in profiles:
-        results.append(RiderResponse(
-            id=p.id,
-            user_id=p.user_id,
-            first_name=p.user.first_name,
-            last_name=p.user.last_name,
-            email=p.user.email,
-            height_cm=p.height_cm,
-            weight_kg=p.weight_kg,
-            date_of_birth=p.date_of_birth,
-            school_id=p.school_id,
-        ))
+        results.append(
+            RiderResponse(
+                id=p.id,
+                user_id=p.user_id,
+                first_name=p.user.first_name,
+                last_name=p.user.last_name,
+                email=p.user.email,
+                height_cm=p.height_cm,
+                weight_kg=p.weight_kg,
+                date_of_birth=p.date_of_birth,
+                school_id=p.school_id,
+            )
+        )
     return results
 
 
@@ -180,8 +188,7 @@ def get_rider(
         db.query(RiderProfile)
         .join(User)
         .filter(
-            RiderProfile.id == r_id,
-            RiderProfile.school_id == current_user.school_id
+            RiderProfile.id == r_id, RiderProfile.school_id == current_user.school_id
         )
         .first()
     )
@@ -217,8 +224,7 @@ def update_rider(
         db.query(RiderProfile)
         .join(User)
         .filter(
-            RiderProfile.id == r_id,
-            RiderProfile.school_id == current_user.school_id
+            RiderProfile.id == r_id, RiderProfile.school_id == current_user.school_id
         )
         .first()
     )
@@ -282,8 +288,7 @@ def delete_rider(
     profile = (
         db.query(RiderProfile)
         .filter(
-            RiderProfile.id == r_id,
-            RiderProfile.school_id == current_user.school_id
+            RiderProfile.id == r_id, RiderProfile.school_id == current_user.school_id
         )
         .first()
     )
@@ -298,7 +303,10 @@ def delete_rider(
     # Prompt said: "soft-delete the Rider Profile and the Membership for that school simultaneously"
     membership = (
         db.query(Membership)
-        .filter(Membership.user_id == profile.user_id, Membership.school_id == current_user.school_id)
+        .filter(
+            Membership.user_id == profile.user_id,
+            Membership.school_id == current_user.school_id,
+        )
         .first()
     )
     if membership:

@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -14,7 +14,7 @@ class SchoolSimple(BaseModel):
 class UserBase(BaseModel):
     first_name: str
     last_name: str
-    email: Optional[EmailStr] = None
+    email: EmailStr | None = None
 
 
 class UserCreate(UserBase):
@@ -30,7 +30,7 @@ class UserSchema(UserBase):
 
 
 class UserWithSchool(UserSchema):
-    school: Optional[SchoolSimple] = None
+    school: SchoolSimple | None = None
 
     # Return list of role names
     roles: list[str] = []

@@ -1,5 +1,4 @@
 import uuid
-from typing import List
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
@@ -10,8 +9,6 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.config import settings
 from app.db import get_db
 from app.models.membership import Membership, MembershipRole
-from app.models.role import Role
-from app.models.school import School
 from app.models.user import User
 from app.schemas.token import TokenPayload
 
@@ -124,7 +121,7 @@ def get_current_active_school_user(
     return current_user
 
 
-def check_permissions(required_permissions: List[str]):
+def check_permissions(required_permissions: list[str]):
     def permission_checker(
         current_user: User = Depends(get_current_active_school_user),
     ) -> User:
@@ -149,7 +146,7 @@ def check_permissions(required_permissions: List[str]):
 
         for perm in required_permissions:
             if perm not in allowed:
-                 raise HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=f"Missing required permission: {perm}",
                 )

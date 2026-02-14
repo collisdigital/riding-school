@@ -1,26 +1,25 @@
-from typing import List, Optional
 from datetime import date
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class RiderCreate(BaseModel):
     first_name: str
     last_name: str
-    email: Optional[EmailStr] = None
-    height_cm: Optional[float] = None
-    weight_kg: Optional[float] = None
-    date_of_birth: Optional[date] = None
+    email: EmailStr | None = None
+    height_cm: float | None = None
+    weight_kg: float | None = None
+    date_of_birth: date | None = None
 
 
 class RiderUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    height_cm: Optional[float] = None
-    weight_kg: Optional[float] = None
-    date_of_birth: Optional[date] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    email: EmailStr | None = None
+    height_cm: float | None = None
+    weight_kg: float | None = None
+    date_of_birth: date | None = None
 
 
 class RiderResponse(BaseModel):
@@ -28,10 +27,10 @@ class RiderResponse(BaseModel):
     user_id: UUID
     first_name: str
     last_name: str
-    email: Optional[str] = None
-    height_cm: Optional[float] = None
-    weight_kg: Optional[float] = None
-    date_of_birth: Optional[date] = None
+    email: str | None = None
+    height_cm: float | None = None
+    weight_kg: float | None = None
+    date_of_birth: date | None = None
     school_id: UUID
 
     model_config = ConfigDict(from_attributes=True)

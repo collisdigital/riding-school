@@ -1,9 +1,9 @@
 import uuid6
-from sqlalchemy import Column, String, Boolean, ForeignKey
+from sqlalchemy import Boolean, Column, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Uuid
 
-from .base import Base, TimestampMixin, SoftDeleteMixin
+from .base import Base, TimestampMixin
 
 
 class User(Base, TimestampMixin):
@@ -17,8 +17,12 @@ class User(Base, TimestampMixin):
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
 
-    memberships = relationship("Membership", back_populates="user", cascade="all, delete-orphan")
-    rider_profiles = relationship("RiderProfile", back_populates="user", cascade="all, delete-orphan")
+    memberships = relationship(
+        "Membership", back_populates="user", cascade="all, delete-orphan"
+    )
+    rider_profiles = relationship(
+        "RiderProfile", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User(email='{self.email}')>"

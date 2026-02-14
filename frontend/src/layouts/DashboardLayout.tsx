@@ -59,9 +59,7 @@ export default function DashboardLayout() {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={`flex items-center space-x-3 p-3 rounded-lg font-medium cursor-pointer transition ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50'
+                  isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 <item.icon className="w-5 h-5" />

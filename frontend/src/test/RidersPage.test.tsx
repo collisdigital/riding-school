@@ -38,7 +38,7 @@ describe('RidersPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(axios.get as any).mockResolvedValue({ data: mockRiders })
+    vi.mocked(axios.get).mockResolvedValue({ data: mockRiders })
     confirmSpy.mockReturnValue(true)
   })
 
@@ -46,7 +46,7 @@ describe('RidersPage', () => {
     render(
       <BrowserRouter>
         <RidersPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     )
 
     await waitFor(() => {
@@ -61,7 +61,7 @@ describe('RidersPage', () => {
     render(
       <BrowserRouter>
         <RidersPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     )
 
     await waitFor(() => expect(screen.getByText('Add Rider')).toBeDefined())
@@ -72,10 +72,10 @@ describe('RidersPage', () => {
   })
 
   it('opens edit rider modal', async () => {
-      render(
+    render(
       <BrowserRouter>
         <RidersPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     )
 
     await waitFor(() => expect(screen.getByText('John Doe')).toBeDefined())
@@ -86,16 +86,16 @@ describe('RidersPage', () => {
 
     expect(screen.getByText('Edit Rider')).toBeDefined()
     // Should populate values
-    expect((screen.getByDisplayValue('John') as HTMLInputElement)).toBeDefined()
+    expect(screen.getByDisplayValue('John') as HTMLInputElement).toBeDefined()
   })
 
   it('deletes a rider', async () => {
-    ;(axios.delete as any).mockResolvedValue({})
+    vi.mocked(axios.delete).mockResolvedValue({ data: {} })
 
     render(
       <BrowserRouter>
         <RidersPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     )
 
     await waitFor(() => expect(screen.getByText('John Doe')).toBeDefined())

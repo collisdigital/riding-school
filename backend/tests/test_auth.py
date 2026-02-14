@@ -101,9 +101,9 @@ async def test_get_me_success(db_session):
     # Assign Role? Not strictly needed for get_me but good practice
     role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
     if not role:
-         role = Role(name=Role.ADMIN)
-         db_session.add(role)
-         db_session.flush()
+        role = Role(name=Role.ADMIN)
+        db_session.add(role)
+        db_session.flush()
 
     mem_role = MembershipRole(membership_id=membership.id, role_id=role.id)
     db_session.add(mem_role)

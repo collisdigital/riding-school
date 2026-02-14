@@ -1,4 +1,5 @@
 import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -74,7 +75,7 @@ async def test_rider_crud_and_isolation(db_session, school_and_admin):
                 "email": f"swift_{school.slug}@hoof.com",
                 "height_cm": 170.5,
                 "weight_kg": 60.0,
-                "date_of_birth": "2010-01-01"
+                "date_of_birth": "2010-01-01",
             },
             headers=headers,
         )
@@ -130,7 +131,9 @@ async def test_rider_crud_and_isolation(db_session, school_and_admin):
 
         # Assign Admin Role to other user
         admin_role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
-        mem_role_other = MembershipRole(membership_id=other_mem.id, role_id=admin_role.id)
+        mem_role_other = MembershipRole(
+            membership_id=other_mem.id, role_id=admin_role.id
+        )
         db_session.add(mem_role_other)
 
         db_session.commit()
@@ -170,7 +173,9 @@ async def test_rider_create_no_email_managed_user(db_session, school_and_admin):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        login_res = await ac.post("/api/auth/login", data={"username": admin.email, "password": password})
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": admin.email, "password": password}
+        )
         token = login_res.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -183,7 +188,7 @@ async def test_rider_create_no_email_managed_user(db_session, school_and_admin):
                 # email omitted
                 "height_cm": 120.0,
             },
-            headers=headers
+            headers=headers,
         )
         assert res.status_code == 200
         data = res.json()
@@ -216,7 +221,9 @@ async def test_rider_create_existing_user_link(db_session, school_and_admin):
     db_session.commit()
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        login_res = await ac.post("/api/auth/login", data={"username": admin.email, "password": password})
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": admin.email, "password": password}
+        )
         token = login_res.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -224,12 +231,12 @@ async def test_rider_create_existing_user_link(db_session, school_and_admin):
         res = await ac.post(
             "/api/riders/",
             json={
-                "first_name": "Existing", # Can match or differ? System should use existing user?
+                "first_name": "Existing",  # Can match or differ? System should use existing user?
                 "last_name": "User",
                 "email": email,
                 "height_cm": 180.0,
             },
-            headers=headers
+            headers=headers,
         )
         assert res.status_code == 200
         data = res.json()

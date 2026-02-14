@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -8,9 +7,9 @@ from .user import UserSchema
 
 
 class RiderProfileBase(BaseModel):
-    height_cm: Optional[float] = None
-    weight_kg: Optional[float] = None
-    date_of_birth: Optional[date] = None
+    height_cm: float | None = None
+    weight_kg: float | None = None
+    date_of_birth: date | None = None
 
 
 class RiderProfileCreate(RiderProfileBase):

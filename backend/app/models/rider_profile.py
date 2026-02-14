@@ -3,7 +3,7 @@ from sqlalchemy import Column, Date, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Uuid
 
-from .base import Base, TimestampMixin, TenantMixin, SoftDeleteMixin
+from .base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin
 
 
 class RiderProfile(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):

@@ -1,4 +1,3 @@
-from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -9,7 +8,7 @@ from .user import UserSchema
 class RoleSchema(BaseModel):
     id: int
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -20,12 +19,12 @@ class MembershipBase(BaseModel):
 
 
 class MembershipCreate(MembershipBase):
-    role_ids: List[int]
+    role_ids: list[int]
 
 
 class MembershipSchema(MembershipBase):
     id: UUID
-    roles: List[RoleSchema] = []
-    user: Optional[UserSchema] = None
+    roles: list[RoleSchema] = []
+    user: UserSchema | None = None
 
     model_config = ConfigDict(from_attributes=True)

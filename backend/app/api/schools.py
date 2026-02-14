@@ -29,7 +29,9 @@ def create_school(
     # creating a school while logged into another school context.
     # But if they have NO context (school_id=None), they can create one.
     if current_user.school_id:
-        raise HTTPException(status_code=400, detail="User already belongs to a school context")
+        raise HTTPException(
+            status_code=400, detail="User already belongs to a school context"
+        )
 
     slug = school_in.name.lower().replace(" ", "-")
     # Check if slug exists
@@ -54,7 +56,7 @@ def create_school(
         # Create Membership
         membership = Membership(user_id=current_user.id, school_id=school.id)
         db.add(membership)
-        db.flush() # Get membership.id
+        db.flush()  # Get membership.id
 
         # Assign Role
         mem_role = MembershipRole(membership_id=membership.id, role_id=admin_role.id)
@@ -66,4 +68,6 @@ def create_school(
 
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create school: {str(e)}") from None
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create school: {str(e)}"
+        ) from None
