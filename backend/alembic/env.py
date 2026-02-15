@@ -1,5 +1,3 @@
-import os
-import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
@@ -7,14 +5,14 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.config import settings
 from app.db import Base
+from app.models.membership import Membership, MembershipRole  # noqa: F401
 
 # Import all models to ensure they are registered with Base.metadata
 from app.models.permission import Permission  # noqa: F401
-from app.models.role import Role  # noqa: F401
-from app.models.membership import Membership, MembershipRole  # noqa: F401
-from app.models.user import User  # noqa: F401
-from app.models.school import School  # noqa: F401
 from app.models.rider_profile import RiderProfile  # noqa: F401
+from app.models.role import Role  # noqa: F401
+from app.models.school import School  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
