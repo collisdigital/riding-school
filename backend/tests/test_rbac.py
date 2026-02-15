@@ -66,7 +66,7 @@ async def test_instructor_cannot_delete_rider(db_session):
         )
 
     assert response.status_code == 403
-    # The message is hardcoded in deps.py
+    # The message is now from RequirePermission dependency
     assert "Missing required permission: riders:delete" in response.json()["detail"]
 
 
@@ -122,3 +122,79 @@ async def test_admin_can_delete_rider(db_session):
         )
 
     assert response.status_code == 404  # Permission passed, but rider not found
+
+
+@pytest.mark.asyncio
+async def test_school_isolation(db_session):
+    """
+    Test that a user with 'riders:delete' (via Admin role) in School A
+    does NOT have it in School B (where they are Instructor).
+    """
+    # 1. Setup: Two Schools
+    school_a = School(name="School A", slug=f"school-a-{uuid.uuid4().hex[:8]}")
+    school_b = School(name="School B", slug=f"school-b-{uuid.uuid4().hex[:8]}")
+    db_session.add(school_a)
+    db_session.add(school_b)
+    db_session.flush()
+
+    # 2. Setup: User
+    email = "isolation@example.com"
+    password = "password123"
+    hashed_password = security.get_password_hash(password)
+    user = User(
+        email=email,
+        hashed_password=hashed_password,
+        first_name="Iso",
+        last_name="User",
+        is_active=True
+    )
+    db_session.add(user)
+    db_session.flush()
+
+    # 3. Roles
+    admin_role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
+    instructor_role = db_session.query(Role).filter(Role.name == Role.INSTRUCTOR).first()
+
+    if not admin_role or not instructor_role:
+        # Should be seeded, but create if missing to avoid test fail
+        # (Though seed_rbac handles this)
+        pass
+
+    # 4. Membership: Admin in School A
+    mem_a = Membership(user_id=user.id, school_id=school_a.id)
+    db_session.add(mem_a)
+    db_session.flush()
+    db_session.add(MembershipRole(membership_id=mem_a.id, role_id=admin_role.id))
+
+    # 5. Membership: Instructor in School B
+    mem_b = Membership(user_id=user.id, school_id=school_b.id)
+    db_session.add(mem_b)
+    db_session.flush()
+    db_session.add(MembershipRole(membership_id=mem_b.id, role_id=instructor_role.id))
+
+    db_session.commit()
+
+    # 6. Test Access in School B (Instructor -> Cannot delete)
+    # Generate token manually for School B context
+    token_b = security.create_access_token(user.id, school_id=school_b.id)
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        fake_id = str(uuid.uuid4())
+        response = await ac.delete(
+            f"/api/riders/{fake_id}", headers={"Authorization": f"Bearer {token_b}"}
+        )
+
+    assert response.status_code == 403, "Should be forbidden in School B (Instructor)"
+    assert "Missing required permission: riders:delete" in response.json()["detail"]
+
+    # 7. Test Access in School A (Admin -> Can delete)
+    token_a = security.create_access_token(user.id, school_id=school_a.id)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        fake_id = str(uuid.uuid4())
+        response = await ac.delete(
+            f"/api/riders/{fake_id}", headers={"Authorization": f"Bearer {token_a}"}
+        )
+
+    assert response.status_code == 404, "Should be allowed (not found) in School A (Admin)"

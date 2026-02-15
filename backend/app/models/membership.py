@@ -21,6 +21,18 @@ class Membership(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
 
     __table_args__ = (UniqueConstraint("user_id", "school_id", name="uq_user_school"),)
 
+    @property
+    def permissions(self):
+        """
+        Returns a flat list of permission names from all associated roles.
+        """
+        perms = set()
+        for mr in self.roles:
+            if mr.role and mr.role.permissions:
+                for p in mr.role.permissions:
+                    perms.add(p.name)
+        return list(perms)
+
 
 class MembershipRole(Base):
     __tablename__ = "membership_roles"
