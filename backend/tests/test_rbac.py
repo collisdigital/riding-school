@@ -146,14 +146,16 @@ async def test_school_isolation(db_session):
         hashed_password=hashed_password,
         first_name="Iso",
         last_name="User",
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
 
     # 3. Roles
     admin_role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
-    instructor_role = db_session.query(Role).filter(Role.name == Role.INSTRUCTOR).first()
+    instructor_role = (
+        db_session.query(Role).filter(Role.name == Role.INSTRUCTOR).first()
+    )
 
     if not admin_role or not instructor_role:
         # Should be seeded, but create if missing to avoid test fail
@@ -197,4 +199,63 @@ async def test_school_isolation(db_session):
             f"/api/riders/{fake_id}", headers={"Authorization": f"Bearer {token_a}"}
         )
 
-    assert response.status_code == 404, "Should be allowed (not found) in School A (Admin)"
+    assert (
+        response.status_code == 404
+    ), "Should be allowed (not found) in School A (Admin)"
+
+
+@pytest.mark.asyncio
+async def test_admin_can_update_rider(db_session):
+    # 1. Setup: Create School
+    school = School(name="Update School", slug=f"update-school-{uuid.uuid4().hex[:8]}")
+    db_session.add(school)
+    db_session.flush()
+
+    # 2. Setup: Create an Admin user
+    email = "updater@example.com"
+    password = "password123"
+    hashed_password = security.get_password_hash(password)
+
+    user = User(
+        email=email,
+        hashed_password=hashed_password,
+        first_name="Mark",
+        last_name="Updater",
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.flush()
+
+    membership = Membership(user_id=user.id, school_id=school.id)
+    db_session.add(membership)
+    db_session.flush()
+
+    admin_role = db_session.query(Role).filter(Role.name == Role.ADMIN).first()
+    if not admin_role:
+        admin_role = Role(name=Role.ADMIN)
+        db_session.add(admin_role)
+        db_session.flush()
+
+    mem_role = MembershipRole(membership_id=membership.id, role_id=admin_role.id)
+    db_session.add(mem_role)
+
+    db_session.commit()
+
+    # 3. Login
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": email, "password": password}
+        )
+        token = login_res.json()["access_token"]
+
+        # 4. Try to update - should get 404 (not found) instead of 403 (forbidden)
+        # This confirms that the user has "riders:update" permission
+        fake_id = str(uuid.uuid4())
+        response = await ac.put(
+            f"/api/riders/{fake_id}",
+            json={"first_name": "Updated"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 404

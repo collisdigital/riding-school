@@ -129,13 +129,13 @@ class RequirePermission:
     def __call__(self, current_user: User = Depends(get_current_active_school_user)):
         # Check if user has permission
         if not current_user.current_membership:
-             # Should be caught by get_current_active_school_user but safe check
-             raise HTTPException(status_code=403, detail="No active membership")
+            # Should be caught by get_current_active_school_user but safe check
+            raise HTTPException(status_code=403, detail="No active membership")
 
         # Use the property added to Membership
         user_perms = current_user.current_membership.permissions
         if self.required_permission not in user_perms:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Missing required permission: {self.required_permission}",
             )

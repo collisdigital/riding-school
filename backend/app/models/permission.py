@@ -11,7 +11,9 @@ class Permission(Base):
     name = Column(String, unique=True, nullable=False)
     description = Column(String)
 
-    roles = relationship("Role", secondary="role_permissions", back_populates="permissions")
+    roles = relationship(
+        "Role", secondary="role_permissions", back_populates="permissions"
+    )
 
     def __repr__(self):
         return f"<Permission(name='{self.name}')>"

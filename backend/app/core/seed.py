@@ -13,7 +13,7 @@ ROLES = [
 PERMISSIONS = [
     # Rider Management
     ("riders:create", "Create new riders"),
-    ("riders:edit", "Edit existing riders"),
+    ("riders:update", "Edit existing riders"),
     ("riders:delete", "Delete riders"),
     ("riders:view", "View riders"),
     # Progression
@@ -52,7 +52,7 @@ def seed_rbac(db: Session):
             db.add(perm)
         perms_map[name] = perm
 
-    db.flush() # Ensure IDs are generated
+    db.flush()  # Ensure IDs are generated
 
     # 3. Assign Permissions to Roles
     all_perms = list(perms_map.values())
