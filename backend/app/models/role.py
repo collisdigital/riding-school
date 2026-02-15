@@ -1,7 +1,14 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import relationship
 
 from .base import Base
+
+role_permissions = Table(
+    "role_permissions",
+    Base.metadata,
+    Column("role_id", Integer, ForeignKey("roles.id"), primary_key=True),
+    Column("permission_id", Integer, ForeignKey("permissions.id"), primary_key=True),
+)
 
 
 class Role(Base):
@@ -18,6 +25,9 @@ class Role(Base):
     RIDER = "RIDER"
 
     membership_roles = relationship("MembershipRole", back_populates="role")
+    permissions = relationship(
+        "Permission", secondary=role_permissions, back_populates="roles"
+    )
 
     def __repr__(self):
         return f"<Role(name='{self.name}')>"

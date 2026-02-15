@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 def create_rider(
     rider_in: RiderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_permissions(["riders:create"])),
+    current_user: User = Depends(deps.RequirePermission("riders:create")),
 ):
     """
     Create a new rider.
@@ -140,7 +140,7 @@ def create_rider(
 @router.get("/", response_model=list[RiderResponse])
 def list_riders(
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_permissions(["riders:view"])),
+    current_user: User = Depends(deps.RequirePermission("riders:view")),
 ):
     """
     List all riders for the current school.
@@ -178,7 +178,7 @@ def list_riders(
 def get_rider(
     rider_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_permissions(["riders:view"])),
+    current_user: User = Depends(deps.RequirePermission("riders:view")),
 ):
     try:
         r_id = uuid.UUID(rider_id)
@@ -235,7 +235,7 @@ def update_rider(
     rider_id: str,
     rider_in: RiderUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_permissions(["riders:update"])),
+    current_user: User = Depends(deps.RequirePermission("riders:update")),
 ):
     try:
         r_id = uuid.UUID(rider_id)
@@ -280,7 +280,7 @@ def update_rider(
 def delete_rider(
     rider_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.check_permissions(["riders:delete"])),
+    current_user: User = Depends(deps.RequirePermission("riders:delete")),
 ):
     try:
         r_id = uuid.UUID(rider_id)
