@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,6 +14,7 @@ from app.models.user import User
 from app.schemas.school import SchoolCreate, SchoolSchema
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=SchoolSchema)
@@ -21,13 +23,6 @@ def create_school(
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
-    # Check if user already has memberships?
-    # For MVP, maybe enforce single-school per user for now?
-    # Or just let them create multiple schools?
-    # Original logic: `if current_user.school_id: raise...`
-    # Since `current_user.school_id` is derived from context, this prevents
-    # creating a school while logged into another school context.
-    # But if they have NO context (school_id=None), they can create one.
     if current_user.school_id:
         raise HTTPException(
             status_code=400, detail="User already belongs to a school context"
@@ -68,6 +63,7 @@ def create_school(
 
     except SQLAlchemyError as e:
         db.rollback()
+        logger.error(f"Failed to create school: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to create school: {str(e)}"
+            status_code=500, detail="Failed to create school"
         ) from None

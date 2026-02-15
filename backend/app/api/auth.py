@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+import uuid
+from datetime import timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
@@ -55,8 +58,12 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not security.verify_password(
-        form_data.password, user.hashed_password
+
+    # Check if user exists and has a password set (managed users might not)
+    if (
+        not user
+        or not user.hashed_password
+        or not security.verify_password(form_data.password, user.hashed_password)
     ):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 

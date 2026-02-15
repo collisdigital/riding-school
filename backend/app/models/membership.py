@@ -3,10 +3,10 @@ from sqlalchemy import Column, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Uuid
 
-from .base import Base, TimestampMixin
+from .base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin
 
 
-class Membership(Base, TimestampMixin):
+class Membership(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __tablename__ = "memberships"
 
     id = Column(Uuid, primary_key=True, default=uuid6.uuid7)

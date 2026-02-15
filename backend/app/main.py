@@ -18,7 +18,9 @@ from .db import Base, SessionLocal, engine, get_db
 async def lifespan(app: FastAPI):
     # Startup: Create tables and seed RBAC
     # DEV ONLY: Drop all tables to support schema changes
-    Base.metadata.drop_all(bind=engine)
+    if settings.ENVIRONMENT == "local":
+        Base.metadata.drop_all(bind=engine)
+
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:

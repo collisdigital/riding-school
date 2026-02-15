@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -14,13 +15,14 @@ from app.models.user import User
 from app.schemas.rider import RiderCreate, RiderResponse, RiderUpdate
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=RiderResponse)
 def create_rider(
     rider_in: RiderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_active_school_user),
+    current_user: User = Depends(deps.check_permissions(["riders:create"])),
 ):
     """
     Create a new rider.
@@ -116,8 +118,9 @@ def create_rider(
         db.commit()
     except SQLAlchemyError as e:
         db.rollback()
+        logger.error(f"Failed to create rider: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to create rider: {str(e)}"
+            status_code=500, detail="Failed to create rider"
         ) from None
 
     db.refresh(profile)
@@ -139,7 +142,7 @@ def create_rider(
 @router.get("/", response_model=list[RiderResponse])
 def list_riders(
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_active_school_user),
+    current_user: User = Depends(deps.check_permissions(["riders:view"])),
 ):
     """
     List all riders for the current school.
@@ -177,7 +180,7 @@ def list_riders(
 def get_rider(
     rider_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.get_current_active_school_user),
+    current_user: User = Depends(deps.check_permissions(["riders:view"])),
 ):
     try:
         r_id = uuid.UUID(rider_id)
