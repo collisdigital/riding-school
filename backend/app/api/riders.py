@@ -1,5 +1,5 @@
-import uuid
 import logging
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -119,9 +119,7 @@ def create_rider(
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Failed to create rider: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to create rider"
-        ) from None
+        raise HTTPException(status_code=500, detail="Failed to create rider") from None
 
     db.refresh(profile)
 

@@ -1,5 +1,5 @@
-import uuid
 import logging
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
@@ -64,6 +64,4 @@ def create_school(
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Failed to create school: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to create school"
-        ) from None
+        raise HTTPException(status_code=500, detail="Failed to create school") from None
