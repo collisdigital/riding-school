@@ -1,49 +1,20 @@
 from sqlalchemy.orm import Session
 
-from app.models.rbac import Permission, Role
+from app.models.role import Role
 
-PERMISSIONS = [
-    ("riders:view", "View riders"),
-    ("riders:edit", "Edit riders"),
-    ("riders:delete", "Delete riders"),
-    ("staff:manage", "Manage staff and permissions"),
-    ("grades:signoff", "Sign off on rider grades"),
+ROLES = [
+    (Role.ADMIN, "Administrator"),
+    (Role.INSTRUCTOR, "Instructor"),
+    (Role.PARENT, "Parent"),
+    (Role.RIDER, "Student Rider"),
 ]
-
-ROLES = {
-    "Admin": [
-        "riders:view",
-        "riders:edit",
-        "riders:delete",
-        "staff:manage",
-        "grades:signoff",
-    ],
-    "Instructor": ["riders:view", "riders:edit", "grades:signoff"],
-    "Parent": ["riders:view"],
-    "Rider": ["riders:view"],
-}
 
 
 def seed_rbac(db: Session):
-    # 1. Create Permissions
-    perm_map = {}
-    for name, desc in PERMISSIONS:
-        perm = db.query(Permission).filter(Permission.name == name).first()
-        if not perm:
-            perm = Permission(name=name, description=desc)
-            db.add(perm)
-            db.flush()
-        perm_map[name] = perm
-
-    # 2. Create Roles and link Permissions
-    for role_name, perms in ROLES.items():
-        role = db.query(Role).filter(Role.name == role_name).first()
+    for name, desc in ROLES:
+        role = db.query(Role).filter(Role.name == name).first()
         if not role:
-            role = Role(name=role_name)
+            role = Role(name=name, description=desc)
             db.add(role)
-            db.flush()
-
-        # Sync permissions
-        role.permissions = [perm_map[p] for p in perms]
 
     db.commit()

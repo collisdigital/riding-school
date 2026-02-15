@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from .api import auth, relationships, riders, schools
+from .api import auth, riders, schools
 from .core.config import settings
 from .core.middleware import SecurityHeadersMiddleware
 from .core.seed import seed_rbac
@@ -17,6 +17,10 @@ from .db import Base, SessionLocal, engine, get_db
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Create tables and seed RBAC
+    # DEV ONLY: Drop all tables to support schema changes
+    if settings.ENVIRONMENT == "local":
+        Base.metadata.drop_all(bind=engine)
+
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
@@ -34,9 +38,6 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(schools.router, prefix="/api/schools", tags=["schools"])
 app.include_router(riders.router, prefix="/api/riders", tags=["riders"])
-app.include_router(
-    relationships.router, prefix="/api/relationships", tags=["relationships"]
-)
 
 
 @app.get("/")

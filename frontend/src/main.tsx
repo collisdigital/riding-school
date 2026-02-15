@@ -7,7 +7,9 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import CreateSchoolPage from './pages/CreateSchoolPage'
 import DashboardPage from './pages/DashboardPage'
+import RidersPage from './pages/RidersPage'
 import { ProtectedRoute } from './layouts/ProtectedRoute'
+import DashboardLayout from './layouts/DashboardLayout'
 import axios from 'axios'
 
 // Configure axios to always send cookies
@@ -34,10 +36,14 @@ createRoot(document.getElementById('root')!).render(
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <DashboardLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="riders" element={<RidersPage />} />
+          {/* Add more routes here like 'grades' */}
+        </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -24,7 +24,9 @@ test('full user journey: register -> create school -> dashboard', async ({ page 
   // 4. Dashboard
   await expect(page).toHaveURL('/dashboard', { timeout: 10000 });
   await expect(page.locator('text=Willow Creek')).toBeVisible();
-  await expect(page.locator('text=No riders added yet.')).toBeVisible();
+  // The dashboard overview now shows stats, not "No riders added yet" (that's on the Riders page)
+  // We can verify "Total Riders" text instead
+  await expect(page.locator('text=Total Riders')).toBeVisible();
 });
 
 test('multi-tenant leak test', async ({ browser }) => {
@@ -64,19 +66,28 @@ test('multi-tenant leak test', async ({ browser }) => {
   await pageB.waitForURL('/dashboard');
 
   // Context A: Add a rider "Thunder Horse"
-  await pageA.fill('input[placeholder="Rider First Name"]', 'Thunder');
-  await pageA.fill('input[placeholder="Rider Last Name"]', 'Horse');
-  await pageA.click('button:text("Add Rider")');
+  // Navigate to Riders Page first
+  await pageA.click('text=Riders');
+  await expect(pageA).toHaveURL('/dashboard/riders');
+
+  await pageA.click('text=Add Rider');
+  await pageA.fill('input[placeholder="Jane"]', 'Thunder'); // First Name
+  await pageA.fill('input[placeholder="Doe"]', 'Horse');   // Last Name
+  await pageA.click('button:text("Create Rider")');
   await expect(pageA.locator('text=Thunder Horse')).toBeVisible();
 
   // Context B: Check that "Thunder Horse" is NOT visible
+  await pageB.click('text=Riders');
+  await expect(pageB).toHaveURL('/dashboard/riders');
+
   await expect(pageB.locator('text=Thunder Horse')).not.toBeVisible();
-  await expect(pageB.locator('text=No riders added yet.')).toBeVisible();
+  await expect(pageB.locator('text=No riders found matching your search.')).toBeVisible(); // Updated empty state text
 
   // Context B: Add a rider "Lightning Flash"
-  await pageB.fill('input[placeholder="Rider First Name"]', 'Lightning');
-  await pageB.fill('input[placeholder="Rider Last Name"]', 'Flash');
-  await pageB.click('button:text("Add Rider")');
+  await pageB.click('text=Add Rider');
+  await pageB.fill('input[placeholder="Jane"]', 'Lightning');
+  await pageB.fill('input[placeholder="Doe"]', 'Flash');
+  await pageB.click('button:text("Create Rider")');
   await expect(pageB.locator('text=Lightning Flash')).toBeVisible();
 
   // Context A: Check that "Lightning Flash" is NOT visible

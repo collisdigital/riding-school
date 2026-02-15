@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,12 +7,14 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.db import get_db
-from app.models.rbac import Role
+from app.models.membership import Membership, MembershipRole
+from app.models.role import Role
 from app.models.school import School
 from app.models.user import User
-from app.schemas import SchoolCreate, SchoolSchema
+from app.schemas.school import SchoolCreate, SchoolSchema
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=SchoolSchema)
@@ -21,34 +24,44 @@ def create_school(
     current_user: User = Depends(deps.get_current_user),
 ):
     if current_user.school_id:
-        raise HTTPException(status_code=400, detail="User already belongs to a school")
+        raise HTTPException(
+            status_code=400, detail="User already belongs to a school context"
+        )
 
     slug = school_in.name.lower().replace(" ", "-")
     # Check if slug exists
     if db.query(School).filter(School.slug == slug).first():
         slug = f"{slug}-{uuid.uuid4().hex[:4]}"
 
-    db_obj = School(name=school_in.name, slug=slug)
-    db.add(db_obj)
+    # Transaction
     try:
-        db.flush()  # Get the ID
+        # Create School
+        school = School(name=school_in.name, slug=slug)
+        db.add(school)
+        db.flush()  # Get school.id
 
-        current_user.school_id = db_obj.id
-
-        # Assign Admin role
-        admin_role = db.query(Role).filter(Role.name == "Admin").first()
+        # Get Admin Role
+        admin_role = db.query(Role).filter(Role.name == Role.ADMIN).first()
         if not admin_role:
-            # Fallback if roles aren't seeded yet
-            admin_role = Role(name="Admin")
+            # Seed if missing
+            admin_role = Role(name=Role.ADMIN, description="Administrator")
             db.add(admin_role)
             db.flush()
 
-        if admin_role not in current_user.roles:
-            current_user.roles.append(admin_role)
+        # Create Membership
+        membership = Membership(user_id=current_user.id, school_id=school.id)
+        db.add(membership)
+        db.flush()  # Get membership.id
+
+        # Assign Role
+        mem_role = MembershipRole(membership_id=membership.id, role_id=admin_role.id)
+        db.add(mem_role)
 
         db.commit()
-    except SQLAlchemyError:
+        db.refresh(school)
+        return school
+
+    except SQLAlchemyError as e:
         db.rollback()
+        logger.error(f"Failed to create school: {e}")
         raise HTTPException(status_code=500, detail="Failed to create school") from None
-    db.refresh(db_obj)
-    return db_obj
