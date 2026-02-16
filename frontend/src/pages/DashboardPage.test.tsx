@@ -13,8 +13,6 @@ const mockedAxios = axios as unknown as {
 describe('DashboardPage', () => {
   beforeEach(() => {
     mockedAxios.get.mockImplementation((url: string) => {
-      if (url === '/api/auth/me')
-        return Promise.resolve({ data: { school: { name: 'Test School' } } })
       if (url === '/api/riders/') return Promise.resolve({ data: [] })
       return Promise.reject(new Error('not found'))
     })
@@ -28,10 +26,10 @@ describe('DashboardPage', () => {
       </BrowserRouter>,
     )
 
-    // Wait for data to load
-    await waitFor(() => expect(screen.getByText('Test School')).toBeInTheDocument())
+    // Wait for initial load
+    await waitFor(() => expect(screen.getByText('Total Riders')).toBeInTheDocument())
 
-    // Check for accessible labels - this should fail initially
+    // Check for accessible labels
     expect(screen.getByLabelText(/Rider First Name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Rider Last Name/i)).toBeInTheDocument()
   })
