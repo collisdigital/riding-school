@@ -71,7 +71,7 @@ describe('RidersPage', () => {
     expect(screen.getByText('Add New Rider')).toBeDefined()
   })
 
-  it('opens edit rider modal', async () => {
+  it('opens edit rider modal using accessible button', async () => {
     render(
       <BrowserRouter>
         <RidersPage />
@@ -80,16 +80,16 @@ describe('RidersPage', () => {
 
     await waitFor(() => expect(screen.getByText('John Doe')).toBeDefined())
 
-    // Find edit button (using title attribute from lucide icon wrapper button)
-    const editBtns = screen.getAllByTitle('Edit')
-    fireEvent.click(editBtns[0])
+    // Use accessible name
+    const editBtn = screen.getByRole('button', { name: /Edit John Doe/i })
+    fireEvent.click(editBtn)
 
     expect(screen.getByText('Edit Rider')).toBeDefined()
     // Should populate values
     expect(screen.getByDisplayValue('John') as HTMLInputElement).toBeDefined()
   })
 
-  it('deletes a rider', async () => {
+  it('deletes a rider using accessible button', async () => {
     vi.mocked(axios.delete).mockResolvedValue({ data: {} })
 
     render(
@@ -100,10 +100,46 @@ describe('RidersPage', () => {
 
     await waitFor(() => expect(screen.getByText('John Doe')).toBeDefined())
 
-    const deleteBtns = screen.getAllByTitle('Delete')
-    fireEvent.click(deleteBtns[0])
+    const deleteBtn = screen.getByRole('button', { name: /Delete John Doe/i })
+    fireEvent.click(deleteBtn)
 
     expect(confirmSpy).toHaveBeenCalled()
+    expect(axios.delete).toHaveBeenCalledWith('/api/riders/rider-1')
+
+    // Wait for the UI update to avoid act() warning
+    await waitFor(() => {
+      expect(screen.queryByText('John Doe')).toBeNull()
+    })
+  })
+
+  it('shows loading state while deleting', async () => {
+    // Mock a delayed delete response
+    vi.mocked(axios.delete).mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      return { data: {} }
+    })
+
+    render(
+      <BrowserRouter>
+        <RidersPage />
+      </BrowserRouter>,
+    )
+
+    await waitFor(() => expect(screen.getByText('John Doe')).toBeDefined())
+
+    const deleteBtn = screen.getByRole('button', { name: /Delete John Doe/i })
+
+    // Initial state: not disabled
+    expect(deleteBtn).not.toBeDisabled()
+
+    fireEvent.click(deleteBtn)
+
+    // Should be disabled immediately (loading state)
+    await waitFor(() => {
+      expect(deleteBtn).toBeDisabled()
+    })
+
+    // Wait for execution to proceed
     expect(axios.delete).toHaveBeenCalledWith('/api/riders/rider-1')
   })
 })
