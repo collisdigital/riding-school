@@ -54,13 +54,17 @@ def seed_rbac(db: Session):
 
     db.flush()  # Ensure IDs are generated
 
-    # 3. Assign Permissions to Roles
+    # 3. Assign Permissions to Roles (Additive / Initial only)
     all_perms = list(perms_map.values())
 
     for role_name, mapping in ROLE_PERMISSIONS.items():
         role = roles_map.get(role_name)
         if not role:
-            # Should be created in step 1, but safe check
+            continue
+
+        # Check if role already has ANY permissions assigned
+        # If so, assume it's been customized or already seeded, and do NOT overwrite.
+        if role.permissions:
             continue
 
         target_perms = []
@@ -69,14 +73,7 @@ def seed_rbac(db: Session):
         else:
             target_perms = [perms_map[p] for p in mapping if p in perms_map]
 
-        # Update role permissions
-        # We can clear and re-add, or append unique.
-        # Since this is seed, ensuring they are present is key.
-        # Simple way: role.permissions = target_perms
-        # This will update the association table.
-
-        # Check if we should overwrite existing custom assignments?
-        # For seed, enforcing default structure is usually desired.
+        # Apply default permissions since none exist
         role.permissions = target_perms
 
     db.commit()

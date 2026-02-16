@@ -4,7 +4,6 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.core import security
-from app.core.seed import seed_rbac
 from app.main import app
 from app.models.membership import Membership, MembershipRole
 from app.models.role import Role
@@ -14,8 +13,7 @@ from app.models.user import User
 
 @pytest.mark.asyncio
 async def test_instructor_cannot_delete_rider(db_session):
-    # Ensure RBAC is seeded
-    seed_rbac(db_session)
+    # RBAC seeding is handled by setup_test_db fixture in conftest.py
 
     # 1. Setup: Create School
     school = School(name="Test School", slug=f"test-school-{uuid.uuid4().hex[:8]}")
@@ -74,8 +72,7 @@ async def test_instructor_cannot_delete_rider(db_session):
 
 @pytest.mark.asyncio
 async def test_admin_can_delete_rider(db_session):
-    # Ensure RBAC is seeded
-    seed_rbac(db_session)
+    # RBAC seeding is handled by setup_test_db fixture in conftest.py
 
     # 1. Setup: Create School
     school = School(name="Admin School", slug=f"admin-school-{uuid.uuid4().hex[:8]}")
@@ -132,8 +129,7 @@ async def test_school_isolation(db_session):
     Test that a user with 'riders:delete' (via Admin role) in School A
     does NOT have it in School B (where they are Instructor).
     """
-    # Ensure RBAC is seeded
-    seed_rbac(db_session)
+    # RBAC seeding is handled by setup_test_db fixture in conftest.py
 
     # 1. Setup: Two Schools
     school_a = School(name="School A", slug=f"school-a-{uuid.uuid4().hex[:8]}")
@@ -209,8 +205,7 @@ async def test_school_isolation(db_session):
 
 @pytest.mark.asyncio
 async def test_admin_can_update_rider(db_session):
-    # Ensure RBAC is seeded
-    seed_rbac(db_session)
+    # RBAC seeding is handled by setup_test_db fixture in conftest.py
 
     # 1. Setup: Create School
     school = School(name="Update School", slug=f"update-school-{uuid.uuid4().hex[:8]}")

@@ -107,6 +107,7 @@ def get_current_user(
         user.school_id = None
         user.school = None
         user.roles = []
+        user.current_membership = None
 
     return user
 
@@ -128,14 +129,18 @@ class RequirePermission:
 
     def __call__(self, current_user: User = Depends(get_current_active_school_user)):
         # Check if user has permission
-        if not current_user.current_membership:
-            # Should be caught by get_current_active_school_user but safe check
-            raise HTTPException(status_code=403, detail="No active membership")
+        # Use getattr to safely check for current_membership to avoid AttributeError
+        # if it wasn't set (though get_current_user sets it to None or an object)
+        membership = getattr(current_user, "current_membership", None)
+
+        if not membership:
+             # Should be caught by get_current_active_school_user but safe check
+             raise HTTPException(status_code=403, detail="No active membership")
 
         # Use the property added to Membership
-        user_perms = current_user.current_membership.permissions
+        user_perms = membership.permissions
         if self.required_permission not in user_perms:
-            raise HTTPException(
+             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Missing required permission: {self.required_permission}",
             )
