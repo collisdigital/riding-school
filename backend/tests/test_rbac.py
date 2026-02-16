@@ -198,9 +198,9 @@ async def test_school_isolation(db_session):
             f"/api/riders/{fake_id}", headers={"Authorization": f"Bearer {token_a}"}
         )
 
-    assert response.status_code == 404, (
-        "Should be allowed (not found) in School A (Admin)"
-    )
+    assert (
+        response.status_code == 404
+    ), "Should be allowed (not found) in School A (Admin)"
 
 
 @pytest.mark.asyncio
