@@ -85,6 +85,7 @@ npx playwright test
 - `app/models/`: SQLAlchemy models. **Critical**: New models must use `TenantMixin`.
 - `app/schemas/`: Pydantic schemas.
 - `app/core/`: Configuration (`config.py`) and security.
+- `alembic/`: Database migration scripts.
 - `tests/`: Pytest suite.
 
 ### Frontend (`frontend/`)
@@ -104,14 +105,18 @@ npx playwright test
     - API endpoints returning school data **MUST** filter by `current_user.school_id`.
     - Use `deps.get_current_active_school_user` for endpoints requiring a school context.
 
-2.  **Authentication**:
+2.  **Authentication & Permissions**:
     - Auth uses HttpOnly cookies (`access_token`).
     - Use `deps.get_current_user` for context-agnostic endpoints (e.g., onboarding).
-    - Frontend checks auth status via non-sensitive checks (e.g., API 401s or localStorage flags), not by reading the cookie.
+    - **Permissions**: Use `deps.RequirePermission("permission_name")` for endpoints requiring specific access rights (e.g., `riders:delete`). Do NOT check role names directly (e.g., `if user.role == "ADMIN"`).
+    - Permissions are seeded via `backend/app/core/seed.py`.
 
-3.  **Database**:
+3.  **Database & Migrations**:
     - Use SQLAlchemy 2.0 style queries (`db.execute(select(Model)...)` or `db.query(Model)`).
-    - Migrations: Currently `Base.metadata.create_all` runs on startup. Do not delete existing migrations if added later.
+    - **Migrations**: Any change to `app/models` requires an Alembic migration.
+        - Generate: `alembic revision --autogenerate -m "message"`
+        - Apply: `alembic upgrade head`
+    - Do NOT rely on `Base.metadata.create_all` for schema updates; use migrations.
 
 4.  **Workflows**:
     - **TDD**: Write a failing backend test or frontend component test before implementing features.
