@@ -176,8 +176,15 @@ async def test_school_isolation(db_session):
     db_session.commit()
 
     # 6. Test Access in School B (Instructor -> Cannot delete)
-    # Generate token manually for School B context
-    token_b = security.create_access_token(user.id, school_id=school_b.id)
+    # Generate token manually for School B context with correct perms
+    # mem_b (Instructor) has NO "riders:delete"
+    # Instructor perms: riders:view, grades:signoff, grades:view_history
+    token_b = security.create_access_token(
+        user.id,
+        school_id=school_b.id,
+        perms=mem_b.permissions,
+        roles=[r.name for r in [instructor_role]],
+    )
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -190,7 +197,13 @@ async def test_school_isolation(db_session):
     assert "Missing required permission: riders:delete" in response.json()["detail"]
 
     # 7. Test Access in School A (Admin -> Can delete)
-    token_a = security.create_access_token(user.id, school_id=school_a.id)
+    # mem_a (Admin) HAS "riders:delete" (via "all")
+    token_a = security.create_access_token(
+        user.id,
+        school_id=school_a.id,
+        perms=mem_a.permissions,
+        roles=[r.name for r in [admin_role]],
+    )
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         fake_id = str(uuid.uuid4())

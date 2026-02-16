@@ -10,24 +10,28 @@ import DashboardPage from './pages/DashboardPage'
 import RidersPage from './pages/RidersPage'
 import { ProtectedRoute } from './layouts/ProtectedRoute'
 import DashboardLayout from './layouts/DashboardLayout'
-import axios from 'axios'
+import axios, { InternalAxiosRequestConfig } from 'axios'
 
 // Configure axios to always send cookies
 axios.defaults.withCredentials = true
+
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean
+}
 
 // Response interceptor to handle token refresh
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config
+    const originalRequest = error.config as CustomAxiosRequestConfig
 
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !(originalRequest as any)._retry &&
+      !originalRequest._retry &&
       !originalRequest.url?.includes('/auth/refresh')
     ) {
-      ;(originalRequest as any)._retry = true
+      originalRequest._retry = true
 
       try {
         await axios.post('/api/auth/refresh')
