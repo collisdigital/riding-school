@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
 
 from app.api import deps
@@ -148,9 +148,10 @@ def list_riders(
     """
     school_id = current_user.school_id
 
+    # Bolt: Optimized to fetch user data in same query (avoids N+1)
     profiles = (
         db.query(RiderProfile)
-        .join(User)
+        .options(joinedload(RiderProfile.user))
         .filter(RiderProfile.school_id == school_id)
         .all()
     )
