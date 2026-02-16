@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Users } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { Users } from 'lucide-react'
 import type { RiderResponse } from '../types'
 
 export default function DashboardPage() {
-  const navigate = useNavigate()
   const [riders, setRiders] = useState<RiderResponse[]>([])
   const [newRiderFirstName, setNewRiderFirstName] = useState('')
   const [newRiderLastName, setNewRiderLastName] = useState('')
@@ -77,7 +75,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <h2 className="text-xl font-bold mb-6">Add Rider</h2>
           <form onSubmit={handleAddRider} className="space-y-4">

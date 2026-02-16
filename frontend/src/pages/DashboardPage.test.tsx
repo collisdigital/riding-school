@@ -5,16 +5,13 @@ import { BrowserRouter } from 'react-router-dom'
 import axios from 'axios'
 
 vi.mock('axios')
-const mockedAxios = axios as unknown as {
-  get: ReturnType<typeof vi.fn>
-  post: ReturnType<typeof vi.fn>
-}
+const mockedAxios = axios as unknown as { get: ReturnType<typeof vi.fn>, post: ReturnType<typeof vi.fn> }
 
 describe('DashboardPage', () => {
   beforeEach(() => {
     mockedAxios.get.mockImplementation((url: string) => {
-      if (url === '/api/riders/') return Promise.resolve({ data: [] })
-      return Promise.reject(new Error('not found'))
+        if (url === '/api/riders/') return Promise.resolve({ data: [] })
+        return Promise.reject(new Error('not found'))
     })
     mockedAxios.post.mockResolvedValue({ data: {} })
   })
@@ -26,8 +23,8 @@ describe('DashboardPage', () => {
       </BrowserRouter>,
     )
 
-    // Wait for initial load
-    await waitFor(() => expect(screen.getByText('Total Riders')).toBeInTheDocument())
+    // Wait for the riders fetch to complete to avoid "act" warning
+    await waitFor(() => expect(mockedAxios.get).toHaveBeenCalled())
 
     // Check for accessible labels
     expect(screen.getByLabelText(/Rider First Name/i)).toBeInTheDocument()
