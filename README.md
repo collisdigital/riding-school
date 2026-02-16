@@ -8,6 +8,77 @@ A production-grade multi-tenant SaaS platform for tracking rider progress throug
 - **Rider Management**: Track riders and their achievements per school.
 - **Auth**: JWT-based authentication with granular Role-Based Access Control (RBAC).
 
+## Data Architecture
+
+The application uses a relational schema with a strong focus on tenant isolation.
+
+```mermaid
+erDiagram
+    User ||--o{ Membership : "has"
+    School ||--o{ Membership : "has"
+    User ||--o{ RiderProfile : "has"
+    School ||--o{ RiderProfile : "has"
+
+    Membership ||--o{ MembershipRole : "has"
+    Role ||--o{ MembershipRole : "assigned_to"
+
+    Role ||--o{ RolePermission : "has"
+    Permission ||--o{ RolePermission : "included_in"
+
+    User {
+        uuid id PK
+        string email
+        string hashed_password
+        string first_name
+        string last_name
+        bool is_active
+        bool is_superuser
+    }
+
+    School {
+        uuid id PK
+        string name
+        string slug
+    }
+
+    Membership {
+        uuid id PK
+        uuid user_id FK
+        uuid school_id FK
+    }
+
+    RiderProfile {
+        uuid id PK
+        uuid user_id FK
+        uuid school_id FK
+        float height_cm
+        float weight_kg
+        date date_of_birth
+    }
+
+    Role {
+        int id PK
+        string name
+        string description
+    }
+
+    Permission {
+        int id PK
+        string name
+        string description
+    }
+
+    MembershipRole {
+        uuid membership_id FK
+        int role_id FK
+    }
+
+    RolePermission {
+        int role_id FK
+        int permission_id FK
+    }
+```
+
 ## Getting Started
 
 ### Prerequisites
