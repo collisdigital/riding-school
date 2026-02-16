@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.config import settings
 from app.db import get_db
 from app.models.membership import Membership, MembershipRole
+from app.models.role import Role
 from app.models.user import User
 from app.schemas.token import TokenPayload
 
@@ -67,7 +68,9 @@ def get_current_user(
         membership = (
             db.query(Membership)
             .options(
-                joinedload(Membership.roles).joinedload(MembershipRole.role),
+                joinedload(Membership.roles)
+                .joinedload(MembershipRole.role)
+                .joinedload(Role.permissions),
                 joinedload(Membership.school),
             )
             .filter(
@@ -84,7 +87,9 @@ def get_current_user(
         membership = (
             db.query(Membership)
             .options(
-                joinedload(Membership.roles).joinedload(MembershipRole.role),
+                joinedload(Membership.roles)
+                .joinedload(MembershipRole.role)
+                .joinedload(Role.permissions),
                 joinedload(Membership.school),
             )
             .filter(Membership.user_id == user.id)
@@ -102,6 +107,7 @@ def get_current_user(
         user.school_id = None
         user.school = None
         user.roles = []
+        user.current_membership = None
 
     return user
 
@@ -117,36 +123,25 @@ def get_current_active_school_user(
     return current_user
 
 
-def check_permissions(required_permissions: list[str]):
-    def permission_checker(
-        current_user: User = Depends(get_current_active_school_user),
-    ) -> User:
-        # Simple static permission check based on Role Names
-        # ADMIN has everything
-        # INSTRUCTOR has limited
-        # PARENT/RIDER has read-only own
+class RequirePermission:
+    def __init__(self, required_permission: str):
+        self.required_permission = required_permission
 
-        user_roles = [r.name for r in current_user.roles]
+    def __call__(self, current_user: User = Depends(get_current_active_school_user)):
+        # Check if user has permission
+        # Use getattr to safely check for current_membership to avoid AttributeError
+        # if it wasn't set (though get_current_user sets it to None or an object)
+        membership = getattr(current_user, "current_membership", None)
 
-        if "ADMIN" in user_roles:
-            return current_user
+        if not membership:
+            # Should be caught by get_current_active_school_user but safe check
+            raise HTTPException(status_code=403, detail="No active membership")
 
-        # TODO: Implement granular permissions if needed.
-        # For now, we assume if you are an Admin, you pass.
-        # If you are not an Admin, we might reject for delete/create actions
-        # unless allowed.
-
-        # Mapping (Mock)
-        allowed = set()
-        if "INSTRUCTOR" in user_roles:
-            allowed.update(["riders:read", "riders:create", "riders:update"])
-
-        for perm in required_permissions:
-            if perm not in allowed:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Missing required permission: {perm}",
-                )
+        # Use the property added to Membership
+        user_perms = membership.permissions
+        if self.required_permission not in user_perms:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Missing required permission: {self.required_permission}",
+            )
         return current_user
-
-    return permission_checker
