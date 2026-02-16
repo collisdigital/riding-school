@@ -1,7 +1,9 @@
 import pytest
 from fastapi import HTTPException
+
 from app.api.deps import RequirePermission
 from app.schemas.token import TokenPayload
+
 
 def test_require_permission_success():
     token = TokenPayload(sub="user", sid="school", perms=["riders:create"])

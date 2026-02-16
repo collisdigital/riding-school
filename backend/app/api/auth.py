@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -63,6 +64,65 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     return db_obj
 
 
+def _get_user_permissions(
+    db: Session, user_id: uuid.UUID
+) -> tuple[uuid.UUID | None, list[str], list[str]]:
+    """
+    Fetch school_id, permissions, and roles for a user eagerly.
+    """
+    membership = (
+        db.query(Membership)
+        .options(
+            joinedload(Membership.roles)
+            .joinedload(MembershipRole.role)
+            .joinedload(Role.permissions),
+            joinedload(Membership.school),
+        )
+        .filter(Membership.user_id == user_id)
+        .first()
+    )
+
+    school_id = None
+    perms = []
+    roles = []
+
+    if membership:
+        school_id = membership.school_id
+        perms = membership.permissions
+        roles = [mr.role.name for mr in membership.roles if mr.role]
+
+    return school_id, perms, roles
+
+
+def _set_auth_cookies(
+    response: Response,
+    access_token: str,
+    refresh_token: str,
+    rt_expire: datetime,
+) -> None:
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="lax",
+        secure=settings.SECURE_COOKIES,
+    )
+
+    rt_max_age = int((rt_expire - datetime.now(UTC)).total_seconds())
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        max_age=rt_max_age,
+        expires=int(rt_expire.timestamp()),
+        samesite="lax",
+        secure=settings.SECURE_COOKIES,
+        path="/api/auth",
+    )
+
+
 @router.post("/login", response_model=Token, dependencies=[Depends(login_limiter)])
 def login(
     response: Response,
@@ -82,28 +142,7 @@ def login(
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
 
-    # Find school context with eager loading for permissions
-    membership = (
-        db.query(Membership)
-        .options(
-            joinedload(Membership.roles)
-            .joinedload(MembershipRole.role)
-            .joinedload(Role.permissions),
-            joinedload(Membership.school),
-        )
-        .filter(Membership.user_id == user.id)
-        .first()
-    )
-
-    school_id = None
-    perms = []
-    roles = []
-
-    if membership:
-        school_id = membership.school_id
-        # Membership permissions property aggregates all role permissions
-        perms = membership.permissions
-        roles = [mr.role.name for mr in membership.roles if mr.role]
+    school_id, perms, roles = _get_user_permissions(db, user.id)
 
     access_token = security.create_access_token(
         user.id, school_id=school_id, perms=perms, roles=roles
@@ -111,34 +150,11 @@ def login(
 
     # Create and store refresh token
     rt_token, rt_hash, rt_expire = security.create_refresh_token(user.id)
-    rt_db = RefreshToken(
-        user_id=user.id, token_hash=rt_hash, expires_at=rt_expire
-    )
+    rt_db = RefreshToken(user_id=user.id, token_hash=rt_hash, expires_at=rt_expire)
     db.add(rt_db)
     db.commit()
 
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=settings.SECURE_COOKIES,
-    )
-
-    # Refresh token cookie (valid for 7 days typically)
-    rt_max_age = int((rt_expire - datetime.now(UTC)).total_seconds())
-    response.set_cookie(
-        key="refresh_token",
-        value=rt_token,
-        httponly=True,
-        max_age=rt_max_age,
-        expires=int(rt_expire.timestamp()),
-        samesite="lax",
-        secure=settings.SECURE_COOKIES,
-        path="/api/auth",  # Restrict to auth endpoints
-    )
+    _set_auth_cookies(response, access_token, rt_token, rt_expire)
 
     return {
         "access_token": access_token,
@@ -199,27 +215,7 @@ def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive"
         )
 
-    # Get fresh permissions
-    membership = (
-        db.query(Membership)
-        .options(
-            joinedload(Membership.roles)
-            .joinedload(MembershipRole.role)
-            .joinedload(Role.permissions),
-            joinedload(Membership.school),
-        )
-        .filter(Membership.user_id == user.id)
-        .first()
-    )
-
-    school_id = None
-    perms = []
-    roles = []
-
-    if membership:
-        school_id = membership.school_id
-        perms = membership.permissions
-        roles = [mr.role.name for mr in membership.roles if mr.role]
+    school_id, perms, roles = _get_user_permissions(db, user.id)
 
     new_access_token = security.create_access_token(
         user.id, school_id=school_id, perms=perms, roles=roles
@@ -240,28 +236,7 @@ def refresh_token(
     rt_db.replaced_by = str(new_rt_db.id)
     db.commit()
 
-    # Set Cookies
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax",
-        secure=settings.SECURE_COOKIES,
-    )
-
-    rt_max_age = int((new_rt_expire - datetime.now(UTC)).total_seconds())
-    response.set_cookie(
-        key="refresh_token",
-        value=new_rt,
-        httponly=True,
-        max_age=rt_max_age,
-        expires=int(new_rt_expire.timestamp()),
-        samesite="lax",
-        secure=settings.SECURE_COOKIES,
-        path="/api/auth",
-    )
+    _set_auth_cookies(response, new_access_token, new_rt, new_rt_expire)
 
     return {
         "access_token": new_access_token,

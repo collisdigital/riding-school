@@ -1,12 +1,14 @@
+from uuid import uuid4
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from app.main import app
+
 from app.core import security
-from app.models.user import User
+from app.main import app
+from app.models.membership import Membership
 from app.models.school import School
-from app.models.membership import Membership, MembershipRole
-from app.models.role import Role
-from uuid import uuid4
+from app.models.user import User
+
 
 @pytest.mark.asyncio
 async def test_login_issue_refresh_token(db_session):

@@ -1,7 +1,7 @@
+import hashlib
+import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
-import secrets
-import hashlib
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -28,8 +28,6 @@ def create_access_token(
     to_encode = {"exp": expire, "sub": str(subject)}
     if school_id:
         to_encode["sid"] = str(school_id)
-        # Also include school_id for temporary backward compatibility if needed,
-        # but let's stick to clean sid as requested.
     if roles:
         to_encode["roles"] = roles
     if perms:
@@ -51,8 +49,7 @@ def create_refresh_token(
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
-        # Default to 7 days for refresh tokens
-        expire = datetime.now(UTC) + timedelta(days=7)
+        expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
     token = secrets.token_urlsafe(32)
     token_hash = get_token_hash(token)

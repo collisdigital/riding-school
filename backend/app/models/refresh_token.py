@@ -1,6 +1,6 @@
+import uuid6
 from sqlalchemy import Column, DateTime, ForeignKey, String
 from sqlalchemy.types import Uuid
-import uuid6
 
 from .base import Base, TimestampMixin
 

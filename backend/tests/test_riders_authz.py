@@ -1,13 +1,16 @@
+from uuid import uuid4
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from app.main import app
-from app.core import security
-from app.models.rider_profile import RiderProfile
-from app.models.user import User
-from app.models.school import School
-from app.models.membership import Membership
-from uuid import uuid4
 from sqlalchemy import event
+
+from app.core import security
+from app.main import app
+from app.models.membership import Membership
+from app.models.rider_profile import RiderProfile
+from app.models.school import School
+from app.models.user import User
+
 
 @pytest.mark.asyncio
 async def test_delete_rider_zero_auth_queries(db_session):
