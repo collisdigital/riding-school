@@ -1,5 +1,17 @@
 import { useState, useEffect } from 'react'
-import { Search, Plus, Edit2, Trash2, X, User, Ruler, Weight, Calendar, Mail, Loader2 } from 'lucide-react'
+import {
+  Search,
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  User,
+  Ruler,
+  Weight,
+  Calendar,
+  Mail,
+  Loader2,
+} from 'lucide-react'
 import axios from 'axios'
 import type { RiderResponse } from '../types'
 
