@@ -19,6 +19,97 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _resolve_user(db: Session, rider_in: RiderCreate) -> User:
+    """Find existing user by email or create a new one."""
+    user = None
+    if rider_in.email:
+        user = db.query(User).filter(User.email == rider_in.email).first()
+
+    if not user:
+        user = User(
+            email=rider_in.email,
+            first_name=rider_in.first_name,
+            last_name=rider_in.last_name,
+            is_active=True,
+            hashed_password=None,  # Managed or Invited later
+        )
+        db.add(user)
+        try:
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=400, detail="User with this email already exists"
+            ) from None
+    return user
+
+
+def _ensure_membership(
+    db: Session, user_id: uuid.UUID, school_id: uuid.UUID
+) -> Membership:
+    """Ensure user has membership in the school."""
+    membership = (
+        db.query(Membership)
+        .filter(Membership.user_id == user_id, Membership.school_id == school_id)
+        .first()
+    )
+    if not membership:
+        membership = Membership(user_id=user_id, school_id=school_id)
+        db.add(membership)
+        db.flush()
+    return membership
+
+
+def _assign_rider_role(db: Session, membership_id: uuid.UUID) -> None:
+    """Ensure membership has the RIDER role."""
+    rider_role = db.query(Role).filter(Role.name == Role.RIDER).first()
+    if not rider_role:
+        # Fallback/Seed
+        rider_role = Role(name=Role.RIDER, description="Student Rider")
+        db.add(rider_role)
+        db.flush()
+
+    has_role = (
+        db.query(MembershipRole)
+        .filter(
+            MembershipRole.membership_id == membership_id,
+            MembershipRole.role_id == rider_role.id,
+        )
+        .first()
+    )
+    if not has_role:
+        mem_role = MembershipRole(membership_id=membership_id, role_id=rider_role.id)
+        db.add(mem_role)
+
+
+def _upsert_rider_profile(
+    db: Session, user_id: uuid.UUID, school_id: uuid.UUID, rider_in: RiderCreate
+) -> RiderProfile:
+    """Create or update rider profile."""
+    profile = (
+        db.query(RiderProfile)
+        .filter(RiderProfile.user_id == user_id, RiderProfile.school_id == school_id)
+        .first()
+    )
+
+    if profile:
+        profile.height_cm = rider_in.height_cm
+        profile.weight_kg = rider_in.weight_kg
+        profile.date_of_birth = rider_in.date_of_birth
+        if profile.deleted_at:
+            profile.deleted_at = None
+    else:
+        profile = RiderProfile(
+            user_id=user_id,
+            school_id=school_id,
+            height_cm=rider_in.height_cm,
+            weight_kg=rider_in.weight_kg,
+            date_of_birth=rider_in.date_of_birth,
+        )
+        db.add(profile)
+    return profile
+
+
 @router.post("/", response_model=RiderResponse)
 def create_rider(
     rider_in: RiderCreate,
@@ -36,86 +127,16 @@ def create_rider(
     school_id = uuid.UUID(token.sid)
 
     # 1. Resolve User
-    user = None
-    if rider_in.email:
-        user = db.query(User).filter(User.email == rider_in.email).first()
-
-    if not user:
-        # Create new user
-        user = User(
-            email=rider_in.email,
-            first_name=rider_in.first_name,
-            last_name=rider_in.last_name,
-            is_active=True,
-            hashed_password=None,  # Managed or Invited later
-        )
-        db.add(user)
-        try:
-            db.flush()
-        except IntegrityError:
-            db.rollback()
-            raise HTTPException(
-                status_code=400, detail="User with this email already exists"
-            ) from None
+    user = _resolve_user(db, rider_in)
 
     # 2. Check/Create Membership
-    membership = (
-        db.query(Membership)
-        .filter(Membership.user_id == user.id, Membership.school_id == school_id)
-        .first()
-    )
-
-    if not membership:
-        membership = Membership(user_id=user.id, school_id=school_id)
-        db.add(membership)
-        db.flush()
+    membership = _ensure_membership(db, user.id, school_id)
 
     # 3. Assign RIDER Role
-    rider_role = db.query(Role).filter(Role.name == Role.RIDER).first()
-    if not rider_role:
-        # Fallback/Seed
-        rider_role = Role(name=Role.RIDER, description="Student Rider")
-        db.add(rider_role)
-        db.flush()
-
-    # Check if role already assigned
-    has_role = (
-        db.query(MembershipRole)
-        .filter(
-            MembershipRole.membership_id == membership.id,
-            MembershipRole.role_id == rider_role.id,
-        )
-        .first()
-    )
-    if not has_role:
-        mem_role = MembershipRole(membership_id=membership.id, role_id=rider_role.id)
-        db.add(mem_role)
+    _assign_rider_role(db, membership.id)
 
     # 4. Create/Update Rider Profile
-    # Check if profile already exists (e.g. re-adding a user)
-    profile = (
-        db.query(RiderProfile)
-        .filter(RiderProfile.user_id == user.id, RiderProfile.school_id == school_id)
-        .first()
-    )
-
-    if profile:
-        # Update existing profile
-        profile.height_cm = rider_in.height_cm
-        profile.weight_kg = rider_in.weight_kg
-        profile.date_of_birth = rider_in.date_of_birth
-        # Reactivate if soft deleted?
-        if profile.deleted_at:
-            profile.deleted_at = None
-    else:
-        profile = RiderProfile(
-            user_id=user.id,
-            school_id=school_id,
-            height_cm=rider_in.height_cm,
-            weight_kg=rider_in.weight_kg,
-            date_of_birth=rider_in.date_of_birth,
-        )
-        db.add(profile)
+    profile = _upsert_rider_profile(db, user.id, school_id, rider_in)
 
     try:
         db.commit()
@@ -198,9 +219,7 @@ def get_rider(
     profile = (
         db.query(RiderProfile)
         .join(User)
-        .filter(
-            RiderProfile.id == r_id, RiderProfile.school_id == school_id
-        )
+        .filter(RiderProfile.id == r_id, RiderProfile.school_id == school_id)
         .first()
     )
     if not profile:

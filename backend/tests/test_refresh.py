@@ -24,8 +24,8 @@ async def test_login_issue_refresh_token(db_session):
     db_session.add(user)
     db_session.flush()
 
-    # Create School/Membership to avoid "No school context" issues if stricter checks added later
-    # Though login works without membership (defaults to None school_id)
+    # Create School/Membership to avoid "No school context" issues if stricter checks
+    # added later. Though login works without membership (defaults to None school_id)
     school = School(name="Refresh School", slug=f"refresh-{uuid4().hex[:8]}")
     db_session.add(school)
     db_session.flush()

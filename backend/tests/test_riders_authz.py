@@ -21,7 +21,13 @@ async def test_delete_rider_zero_auth_queries(db_session):
 
     instructor_id = uuid4()
 
-    rider_user = User(email="rider@example.com", first_name="Rider", last_name="One", is_active=True, hashed_password="pw")
+    rider_user = User(
+        email="rider@example.com",
+        first_name="Rider",
+        last_name="One",
+        is_active=True,
+        hashed_password="pw",
+    )
     db_session.add(rider_user)
     db_session.flush()
 
@@ -51,8 +57,7 @@ async def test_delete_rider_zero_auth_queries(db_session):
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.delete(
-            f"/api/riders/{profile.id}",
-            headers={"Authorization": f"Bearer {token}"}
+            f"/api/riders/{profile.id}", headers={"Authorization": f"Bearer {token}"}
         )
 
     event.remove(db_session.bind, "before_cursor_execute", count_queries)
@@ -63,7 +68,8 @@ async def test_delete_rider_zero_auth_queries(db_session):
     for q in queries:
         print(q)
 
-    # Verify no query selects from 'users' table (unless it's the rider's user, but rider profile query might join user?)
+    # Verify no query selects from 'users' table (unless it's the rider's user, but
+    # rider profile query might join user?)
     # delete_rider code:
     # profile = db.query(RiderProfile).filter(...).first() -> SELECT rider_profile ...
     # membership = db.query(Membership).filter(...).first() -> SELECT membership ...
@@ -76,9 +82,9 @@ async def test_delete_rider_zero_auth_queries(db_session):
         assert "roles" not in q
         assert "permissions" not in q
         # Ensure we don't query the instructor
-        # Instructor ID is not in DB, so if it tried to find it, it would query WHERE id = ?.
-        # But we can't easily check param values here without more complex listener.
-        # But if we see a SELECT from users, it must be rider's user if any.
+        # Instructor ID is not in DB, so if it tried to find it, it would query WHERE
+        # id = ?. But we can't easily check param values here without more complex
+        # listener. But if we see a SELECT from users, it must be rider's user if any.
 
     # Check count. Logic implies:
     # 1. Select Profile

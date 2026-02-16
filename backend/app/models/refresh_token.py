@@ -13,4 +13,5 @@ class RefreshToken(Base, TimestampMixin):
     token_hash = Column(String, unique=True, index=True, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     revoked_at = Column(DateTime(timezone=True), nullable=True)
-    replaced_by = Column(String, nullable=True)  # ID of the new token replacing this one
+    # ID of the new token replacing this one
+    replaced_by = Column(String, nullable=True)

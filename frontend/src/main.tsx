@@ -27,7 +27,7 @@ axios.interceptors.response.use(
       !(originalRequest as any)._retry &&
       !originalRequest.url?.includes('/auth/refresh')
     ) {
-      (originalRequest as any)._retry = true
+      ;(originalRequest as any)._retry = true
 
       try {
         await axios.post('/api/auth/refresh')
