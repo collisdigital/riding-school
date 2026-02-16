@@ -13,6 +13,7 @@ from app.models.rider_profile import RiderProfile
 from app.models.role import Role
 from app.models.user import User
 from app.schemas.rider import RiderCreate, RiderResponse, RiderUpdate
+from app.schemas.token import TokenPayload
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 def create_rider(
     rider_in: RiderCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.RequirePermission("riders:create")),
+    token: TokenPayload = Depends(deps.RequirePermission("riders:create")),
 ):
     """
     Create a new rider.
@@ -30,7 +31,9 @@ def create_rider(
     - If no email, creates a managed user.
     - Creates Membership and RiderProfile for the current school.
     """
-    school_id = current_user.school_id
+    if not token.sid:
+        raise HTTPException(status_code=400, detail="Invalid school context")
+    school_id = uuid.UUID(token.sid)
 
     # 1. Resolve User
     user = None
@@ -140,13 +143,15 @@ def create_rider(
 @router.get("/", response_model=list[RiderResponse])
 def list_riders(
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.RequirePermission("riders:view")),
+    token: TokenPayload = Depends(deps.RequirePermission("riders:view")),
 ):
     """
     List all riders for the current school.
     Automatically filters soft-deleted profiles via DB event.
     """
-    school_id = current_user.school_id
+    if not token.sid:
+        raise HTTPException(status_code=400, detail="Invalid school context")
+    school_id = uuid.UUID(token.sid)
 
     # Bolt: Optimized to fetch user data in same query (avoids N+1)
     profiles = (
@@ -179,18 +184,22 @@ def list_riders(
 def get_rider(
     rider_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.RequirePermission("riders:view")),
+    token: TokenPayload = Depends(deps.RequirePermission("riders:view")),
 ):
     try:
         r_id = uuid.UUID(rider_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid rider ID") from None
 
+    if not token.sid:
+        raise HTTPException(status_code=400, detail="Invalid school context")
+    school_id = uuid.UUID(token.sid)
+
     profile = (
         db.query(RiderProfile)
         .join(User)
         .filter(
-            RiderProfile.id == r_id, RiderProfile.school_id == current_user.school_id
+            RiderProfile.id == r_id, RiderProfile.school_id == school_id
         )
         .first()
     )
@@ -236,18 +245,22 @@ def update_rider(
     rider_id: str,
     rider_in: RiderUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.RequirePermission("riders:update")),
+    token: TokenPayload = Depends(deps.RequirePermission("riders:update")),
 ):
     try:
         r_id = uuid.UUID(rider_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid rider ID") from None
 
+    if not token.sid:
+        raise HTTPException(status_code=400, detail="Invalid school context")
+    school_id = uuid.UUID(token.sid)
+
     profile = (
         db.query(RiderProfile)
         .join(User)
         .filter(
-            RiderProfile.id == r_id, RiderProfile.school_id == current_user.school_id
+            RiderProfile.id == r_id, RiderProfile.school_id == school_id
         )
         .first()
     )
@@ -281,18 +294,22 @@ def update_rider(
 def delete_rider(
     rider_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(deps.RequirePermission("riders:delete")),
+    token: TokenPayload = Depends(deps.RequirePermission("riders:delete")),
 ):
     try:
         r_id = uuid.UUID(rider_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid rider ID") from None
 
+    if not token.sid:
+        raise HTTPException(status_code=400, detail="Invalid school context")
+    school_id = uuid.UUID(token.sid)
+
     # Find profile
     profile = (
         db.query(RiderProfile)
         .filter(
-            RiderProfile.id == r_id, RiderProfile.school_id == current_user.school_id
+            RiderProfile.id == r_id, RiderProfile.school_id == school_id
         )
         .first()
     )
@@ -308,7 +325,7 @@ def delete_rider(
         db.query(Membership)
         .filter(
             Membership.user_id == profile.user_id,
-            Membership.school_id == current_user.school_id,
+            Membership.school_id == school_id,
         )
         .first()
     )

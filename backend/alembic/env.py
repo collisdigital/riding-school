@@ -9,6 +9,7 @@ from app.models.membership import Membership, MembershipRole  # noqa: F401
 
 # Import all models to ensure they are registered with Base.metadata
 from app.models.permission import Permission  # noqa: F401
+from app.models.refresh_token import RefreshToken  # noqa: F401
 from app.models.rider_profile import RiderProfile  # noqa: F401
 from app.models.role import Role  # noqa: F401
 from app.models.school import School  # noqa: F401

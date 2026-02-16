@@ -8,4 +8,6 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     sub: str | None = None
-    school_id: str | None = None
+    sid: str | None = None
+    perms: list[str] = []
+    roles: list[str] = []

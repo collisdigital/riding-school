@@ -15,6 +15,34 @@ import axios from 'axios'
 // Configure axios to always send cookies
 axios.defaults.withCredentials = true
 
+// Response interceptor to handle token refresh
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !(originalRequest as any)._retry &&
+      !originalRequest.url?.includes('/auth/refresh')
+    ) {
+      (originalRequest as any)._retry = true
+
+      try {
+        await axios.post('/api/auth/refresh')
+        return axios(originalRequest)
+      } catch (refreshError) {
+        // Refresh failed - clear auth state and redirect
+        localStorage.removeItem('authenticated')
+        window.location.href = '/login'
+        return Promise.reject(refreshError)
+      }
+    }
+    return Promise.reject(error)
+  },
+)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
