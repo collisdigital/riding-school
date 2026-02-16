@@ -14,7 +14,16 @@ from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserSchema, UserWithSchool
 
 router = APIRouter()
-login_limiter = RateLimiter(requests_limit=5, time_window=60)
+login_limiter = RateLimiter(
+    requests_limit=5,
+    time_window=60,
+    error_message="Too many login attempts. Please try again later.",
+)
+register_limiter = RateLimiter(
+    requests_limit=5,
+    time_window=60,
+    error_message="Too many registration attempts. Please try again later.",
+)
 
 
 @router.get("/me", response_model=UserWithSchool)
@@ -22,7 +31,9 @@ def get_me(current_user: User = Depends(deps.get_current_user)):
     return current_user
 
 
-@router.post("/register", response_model=UserSchema)
+@router.post(
+    "/register", response_model=UserSchema, dependencies=[Depends(register_limiter)]
+)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == user_in.email).first()
     if user:
