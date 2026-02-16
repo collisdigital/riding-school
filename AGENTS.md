@@ -32,10 +32,11 @@ pip install -r requirements.txt
 ```
 
 **Linting & Formatting:**
-*Always run before committing.*
+*Always run before committing. Verify changes with `--check`.*
 ```bash
-ruff check .
+ruff check . --fix
 ruff format .
+ruff format --check .
 ```
 
 **Testing:**
@@ -55,10 +56,11 @@ npm install
 ```
 
 **Linting & Formatting:**
-*Always run before committing.*
+*Always run before committing. Verify changes.*
 ```bash
 npm run lint
 npm run format
+npx prettier --check .
 ```
 
 **Testing (Unit/Component):**

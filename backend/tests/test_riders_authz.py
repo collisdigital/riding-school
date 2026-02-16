@@ -44,10 +44,11 @@ async def test_delete_rider_zero_auth_queries(db_session):
         instructor_id,
         school_id=school.id,
         perms=["riders:delete"],
-        roles=["INSTRUCTOR"]
+        roles=["INSTRUCTOR"],
     )
 
     queries = []
+
     def count_queries(conn, cursor, statement, parameters, context, executemany):
         queries.append(statement)
 

@@ -177,9 +177,7 @@ def refresh_token(
     rt_hash = security.get_token_hash(refresh_token)
 
     # Find token in DB
-    rt_db = (
-        db.query(RefreshToken).filter(RefreshToken.token_hash == rt_hash).first()
-    )
+    rt_db = db.query(RefreshToken).filter(RefreshToken.token_hash == rt_hash).first()
 
     if not rt_db:
         response.delete_cookie("refresh_token", path="/api/auth")

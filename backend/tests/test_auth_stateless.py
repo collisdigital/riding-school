@@ -11,6 +11,7 @@ def test_require_permission_success():
     result = dependency(token_data=token)
     assert result == token
 
+
 def test_require_permission_failure():
     token = TokenPayload(sub="user", sid="school", perms=["riders:view"])
     dependency = RequirePermission("riders:create")

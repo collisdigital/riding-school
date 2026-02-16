@@ -278,9 +278,7 @@ def update_rider(
     profile = (
         db.query(RiderProfile)
         .join(User)
-        .filter(
-            RiderProfile.id == r_id, RiderProfile.school_id == school_id
-        )
+        .filter(RiderProfile.id == r_id, RiderProfile.school_id == school_id)
         .first()
     )
     if not profile:
@@ -327,9 +325,7 @@ def delete_rider(
     # Find profile
     profile = (
         db.query(RiderProfile)
-        .filter(
-            RiderProfile.id == r_id, RiderProfile.school_id == school_id
-        )
+        .filter(RiderProfile.id == r_id, RiderProfile.school_id == school_id)
         .first()
     )
 

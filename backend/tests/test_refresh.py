@@ -19,7 +19,7 @@ async def test_login_issue_refresh_token(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="Refresh",
         last_name="Test",
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
@@ -40,7 +40,7 @@ async def test_login_issue_refresh_token(db_session):
         response = await ac.post(
             "/api/auth/login",
             data={"username": user.email, "password": password},
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 
     assert response.status_code == 200
