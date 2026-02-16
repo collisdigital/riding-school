@@ -134,13 +134,13 @@ class RequirePermission:
         membership = getattr(current_user, "current_membership", None)
 
         if not membership:
-             # Should be caught by get_current_active_school_user but safe check
-             raise HTTPException(status_code=403, detail="No active membership")
+            # Should be caught by get_current_active_school_user but safe check
+            raise HTTPException(status_code=403, detail="No active membership")
 
         # Use the property added to Membership
         user_perms = membership.permissions
         if self.required_permission not in user_perms:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Missing required permission: {self.required_permission}",
             )
