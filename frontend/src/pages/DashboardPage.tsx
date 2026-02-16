@@ -91,7 +91,10 @@ export default function DashboardPage() {
               </div>
             )}
             <div>
-              <label htmlFor="rider-first-name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="rider-first-name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Rider First Name
               </label>
               <input
@@ -105,7 +108,10 @@ export default function DashboardPage() {
               />
             </div>
             <div>
-              <label htmlFor="rider-last-name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="rider-last-name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Rider Last Name
               </label>
               <input
