@@ -18,7 +18,20 @@ To start the entire application (Backend on 8000, Frontend on 5173, DB on 5432):
 ```bash
 docker-compose up --build
 ```
-*Note: This is required for E2E tests and full manual verification.*
+*Notes:*
+- *Backend startup runs Alembic migrations automatically via `backend/start.sh` (`alembic upgrade head`) before starting Uvicorn.*
+- *This is required for E2E tests and full manual verification.*
+
+### 1.1 Clean Build Reset (No Data)
+To fully reset Docker state (containers, images, networks, and volumes, including PostgreSQL data):
+```bash
+docker system prune -a --volumes -f
+```
+
+Then rebuild:
+```bash
+docker-compose up --build
+```
 
 ### 2. Backend (Local Development)
 *Prerequisites: Python 3.12, pip*
@@ -115,6 +128,7 @@ npx playwright test
 
 3.  **Database & Migrations**:
     - Use SQLAlchemy 2.0 style queries (`db.execute(select(Model)...)` or `db.query(Model)`).
+    - Docker backend startup applies migrations automatically (`alembic upgrade head`) before the API starts.
     - **Migrations**: Any change to `app/models` requires an Alembic migration.
         - Generate: `alembic revision --autogenerate -m "message"`
         - Apply: `alembic upgrade head`

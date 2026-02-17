@@ -87,9 +87,20 @@ erDiagram
 ### Running the App
 1. Clone the repository.
 2. Run `docker-compose up --build`.
-   - *Note: This will automatically run database migrations on startup.*
+    - *Note: The backend container runs Alembic migrations (`alembic upgrade head`) on startup before launching the API server.*
 3. Open [http://localhost:5173](http://localhost:5173) to see the landing page.
 4. Access the API documentation at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+### Clean Build (No Existing Data)
+To remove all Docker containers, images, networks, and volumes (including PostgreSQL data), run:
+```bash
+docker system prune -a --volumes -f
+```
+
+Then rebuild and start from scratch:
+```bash
+docker-compose up --build
+```
 
 ## Database Management
 
@@ -100,6 +111,13 @@ If you need to apply migrations manually (e.g., during development without resta
 ```bash
 docker-compose run backend alembic upgrade head
 ```
+
+### Migration Startup Behavior
+The backend Docker image starts with `backend/start.sh`, which runs:
+```bash
+alembic upgrade head
+```
+before starting Uvicorn. If migrations fail, the backend container exits and the API does not start with a stale schema.
 
 ### Creating a New Migration
 When you modify SQLAlchemy models in `backend/app/models`, generate a new migration file:

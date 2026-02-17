@@ -10,7 +10,7 @@ import DashboardPage from './pages/DashboardPage'
 import RidersPage from './pages/RidersPage'
 import { ProtectedRoute } from './layouts/ProtectedRoute'
 import DashboardLayout from './layouts/DashboardLayout'
-import axios, { InternalAxiosRequestConfig } from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 
 // Configure axios to always send cookies
 axios.defaults.withCredentials = true
