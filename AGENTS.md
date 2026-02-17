@@ -59,6 +59,14 @@ PYTHONPATH=. pytest
 ```
 *Expected Output: All tests passed. Ignore deprecation warnings.*
 
+**Run API outside Docker:**
+```bash
+# Optional sqlite for local app run
+export DATABASE_URL=sqlite:///./local.db
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
 ### 3. Frontend (Local Development)
 *Prerequisites: Node.js (v20+ recommended), npm*
 
@@ -82,15 +90,37 @@ npm test -- --run
 ```
 
 ### 4. End-to-End Tests
-*Prerequisites: Application running via `docker-compose up`.*
+*Prerequisites (outside Docker): Backend and Frontend running locally at `http://localhost:8000` and `http://localhost:5173`.*
 
-**Run Tests:**
+**Run Tests (outside Docker):**
 ```bash
+# backend terminal
+cd backend
+source venv/bin/activate
+export DATABASE_URL=sqlite:///./local.db
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# frontend terminal
+cd frontend
+npm install
+npm run dev
+
+# e2e terminal
+cd e2e
+npm install
+npx playwright install chromium
+npx playwright test
+```
+*Note: These tests verify critical multi-tenant isolation. If they fail, do NOT merge.*
+
+**Run Tests (Docker alternative):**
+```bash
+docker-compose up --build
 cd e2e
 npm install
 npx playwright test
 ```
-*Note: These tests verify critical multi-tenant isolation. If they fail, do NOT merge.*
 
 ## Project Layout
 

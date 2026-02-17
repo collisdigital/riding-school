@@ -101,25 +101,121 @@ erDiagram
 
 ## Getting Started
 
-### Prerequisites
-- Docker and Docker Compose
+### Option A: Run Without Docker
 
-### Running the App
-1. Clone the repository.
-2. Run `docker-compose up --build`.
-    - *Note: The backend container runs Alembic migrations (`alembic upgrade head`) on startup before launching the API server.*
-3. Open [http://localhost:5173](http://localhost:5173) to see the landing page.
-4. Access the API documentation at [http://localhost:8000/docs](http://localhost:8000/docs).
+#### System Dependencies
+- Python 3.12+
+- Node.js 20+ and npm
+- (Optional) PostgreSQL 16 if you want parity with Docker; local development can use SQLite
 
-### Clean Build (No Existing Data)
-To remove all Docker containers, images, networks, and volumes (including PostgreSQL data), run:
+#### Backend (Local)
 ```bash
-docker system prune -a --volumes -f
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Optional for local app run without Postgres
+export DATABASE_URL=sqlite:///./local.db
+
+# Apply schema
+alembic upgrade head
+
+# Run API
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Then rebuild and start from scratch:
+#### Frontend (Local)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+#### Access URLs
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Option B: Run With Docker
+
+**Prerequisites:** Docker and Docker Compose
+
 ```bash
 docker-compose up --build
+```
+
+Access URLs:
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+*Note: The backend container runs Alembic migrations (`alembic upgrade head`) on startup before launching Uvicorn.*
+
+### Clean Docker Reset (No Existing Data)
+```bash
+docker system prune -a --volumes -f
+docker-compose up --build
+```
+
+## Testing
+
+### Backend Tests (Pytest)
+
+Local:
+```bash
+cd backend
+source venv/bin/activate
+PYTHONPATH=. pytest
+```
+
+Docker:
+```bash
+docker-compose run -e PYTHONPATH=. backend pytest
+```
+
+### Frontend Tests (Vitest)
+
+Local:
+```bash
+cd frontend
+npm install
+npm test -- --run
+```
+
+Docker:
+```bash
+docker-compose run frontend npm run test -- --run
+```
+
+### End-to-End Tests (Playwright)
+
+Outside Docker:
+```bash
+# Terminal 1: backend
+cd backend
+source venv/bin/activate
+export DATABASE_URL=sqlite:///./local.db
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Terminal 2: frontend
+cd frontend
+npm install
+npm run dev
+
+# Terminal 3: e2e
+cd e2e
+npm install
+npx playwright install chromium
+npx playwright test
+```
+
+Docker alternative:
+```bash
+docker-compose up --build
+cd e2e
+npm install
+npx playwright install chromium
+npx playwright test
 ```
 
 ## Database Management
@@ -129,52 +225,35 @@ The project uses **Alembic** for database schema migrations.
 Current baseline migration history is reset to a single initial revision:
 - `backend/alembic/versions/0001_initial_schema.py`
 
-### Running Migrations Manually
-If you need to apply migrations manually (e.g., during development without restarting the container):
+### Apply Migrations
+
+Local:
+```bash
+cd backend
+source venv/bin/activate
+alembic upgrade head
+```
+
+Docker:
 ```bash
 docker-compose run backend alembic upgrade head
 ```
 
-### Migration Startup Behavior
-The backend Docker image starts with `backend/start.sh`, which runs:
-```bash
-alembic upgrade head
-```
-before starting Uvicorn. If migrations fail, the backend container exits and the API does not start with a stale schema.
+### Create a New Migration
 
-### Creating a New Migration
-When you modify SQLAlchemy models in `backend/app/models`, generate a new migration file on top of `0001_initial_schema`:
+Local:
+```bash
+cd backend
+source venv/bin/activate
+alembic revision --autogenerate -m "Description of changes"
+```
+
+Docker:
 ```bash
 docker-compose run backend alembic revision --autogenerate -m "Description of changes"
 ```
-Review the generated file in `backend/alembic/versions/` before committing.
 
-## Testing
-
-### End-to-End Tests (Playwright)
-E2E tests verify the full user journey and multi-tenant isolation.
-```bash
-# Ensure the app is running first
-# In a new terminal:
-cd e2e
-npm install
-npx playwright test
-```
-
-### Backend Tests (Pytest)
-```bash
-# Run tests locally (requires python env)
-cd backend
-PYTHONPATH=. pytest
-
-# Or via Docker
-docker-compose run -e PYTHONPATH=. backend pytest
-```
-
-### Frontend Tests (Vitest)
-```bash
-docker-compose run frontend npm run test -- --run
-```
+Review generated files in `backend/alembic/versions/` before committing.
 
 ## Project Structure
 - `backend/`: FastAPI application.
