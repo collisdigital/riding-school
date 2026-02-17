@@ -13,6 +13,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: ['frontend', 'localhost', '127.0.0.1'],
     proxy: {
       '/api': {
         target: process.env.VITE_API_TARGET || 'http://backend:8000',
