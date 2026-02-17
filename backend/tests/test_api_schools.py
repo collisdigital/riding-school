@@ -1,7 +1,9 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
+from jose import jwt
 
 from app.core import security
+from app.core.config import settings
 from app.main import app
 from app.models.membership import Membership
 from app.models.school import School
@@ -139,3 +141,41 @@ async def test_create_school_duplicate_slug(db_session):
     data = response.json()
     assert data["slug"].startswith("willow-creek-")
     assert len(data["slug"]) > len("willow-creek")
+
+
+@pytest.mark.asyncio
+async def test_create_school_refreshes_access_token_claims(db_session):
+    email = "refresh-claims@example.com"
+    password = "password123"
+    user = User(
+        email=email,
+        hashed_password=security.get_password_hash(password),
+        first_name="Refresh",
+        last_name="Claims",
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": email, "password": password}
+        )
+        assert login_res.status_code == 200
+
+        create_res = await ac.post("/api/schools/", json={"name": "Token School"})
+        assert create_res.status_code == 200
+
+        access_cookie = create_res.cookies.get("access_token")
+        assert access_cookie is not None
+
+        claims = jwt.decode(
+            access_cookie, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        assert claims.get("sid") is not None
+        assert "riders:view" in claims.get("perms", [])
+
+        riders_res = await ac.get("/api/riders/")
+        assert riders_res.status_code == 200
+        assert riders_res.json() == []
