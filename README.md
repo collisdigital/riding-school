@@ -18,6 +18,7 @@ erDiagram
     School ||--o{ Membership : "has"
     User ||--o{ RiderProfile : "has"
     School ||--o{ RiderProfile : "has"
+    User ||--o{ RefreshToken : "has"
 
     Membership ||--o{ MembershipRole : "has"
     Role ||--o{ MembershipRole : "assigned_to"
@@ -31,20 +32,25 @@ erDiagram
         string hashed_password
         string first_name
         string last_name
-        bool is_active
-        bool is_superuser
+        datetime created_at
+        datetime updated_at
     }
 
     School {
         uuid id PK
         string name
         string slug
+        datetime created_at
+        datetime updated_at
     }
 
     Membership {
         uuid id PK
         uuid user_id FK
         uuid school_id FK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
     }
 
     RiderProfile {
@@ -54,6 +60,20 @@ erDiagram
         float height_cm
         float weight_kg
         date date_of_birth
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+    }
+
+    RefreshToken {
+        uuid id PK
+        uuid user_id FK
+        string token_hash
+        datetime expires_at
+        datetime revoked_at
+        string replaced_by
+        datetime created_at
+        datetime updated_at
     }
 
     Role {
@@ -81,59 +101,169 @@ erDiagram
 
 ## Getting Started
 
-### Prerequisites
-- Docker and Docker Compose
+### Option A: Run Without Docker
 
-### Running the App
-1. Clone the repository.
-2. Run `docker-compose up --build`.
-   - *Note: This will automatically run database migrations on startup.*
-3. Open [http://localhost:5173](http://localhost:5173) to see the landing page.
-4. Access the API documentation at [http://localhost:8000/docs](http://localhost:8000/docs).
+#### System Dependencies
+- Python 3.12+
+- Node.js 20+ and npm
+- (Optional) PostgreSQL 16 if you want parity with Docker; local development can use SQLite
+
+#### Backend (Local)
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Optional for local app run without Postgres
+export DATABASE_URL=sqlite:///./local.db
+
+# Apply schema
+alembic upgrade head
+
+# Run API
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### Frontend (Local)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+#### Access URLs
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Option B: Run With Docker
+
+**Prerequisites:** Docker and Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+Access URLs:
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+*Note: The backend container runs Alembic migrations (`alembic upgrade head`) on startup before launching Uvicorn.*
+
+### Clean Docker Reset (No Existing Data)
+```bash
+docker system prune -a --volumes -f
+docker-compose up --build
+```
+
+## Testing
+
+### Backend Tests (Pytest)
+
+Local:
+```bash
+cd backend
+source venv/bin/activate
+PYTHONPATH=. pytest
+```
+
+Docker:
+```bash
+docker-compose run -e PYTHONPATH=. backend pytest
+```
+
+### Frontend Tests (Vitest)
+
+Local:
+```bash
+cd frontend
+npm install
+npm test -- --run
+```
+
+Docker:
+```bash
+docker-compose run frontend npm run test -- --run
+```
+
+### End-to-End Tests (Playwright)
+
+Outside Docker:
+```bash
+# Terminal 1: backend
+cd backend
+source venv/bin/activate
+export DATABASE_URL=sqlite:///./local.db
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Terminal 2: frontend
+cd frontend
+npm install
+npm run dev
+
+# Terminal 3: e2e
+cd e2e
+npm install
+npx playwright install chromium
+npx playwright test
+```
+
+Docker one-shot (start stack, run tests, shutdown automatically):
+```bash
+docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from e2e e2e
+```
+
+Docker manual alternative:
+```bash
+docker-compose up --build
+cd e2e
+npm install
+npx playwright install chromium
+npx playwright test
+```
+
+Cleanup after one-shot/manual Docker runs:
+```bash
+docker compose down -v
+```
 
 ## Database Management
 
 The project uses **Alembic** for database schema migrations.
 
-### Running Migrations Manually
-If you need to apply migrations manually (e.g., during development without restarting the container):
+Current baseline migration history is reset to a single initial revision:
+- `backend/alembic/versions/0001_initial_schema.py`
+
+### Apply Migrations
+
+Local:
+```bash
+cd backend
+source venv/bin/activate
+alembic upgrade head
+```
+
+Docker:
 ```bash
 docker-compose run backend alembic upgrade head
 ```
 
-### Creating a New Migration
-When you modify SQLAlchemy models in `backend/app/models`, generate a new migration file:
+### Create a New Migration
+
+Local:
+```bash
+cd backend
+source venv/bin/activate
+alembic revision --autogenerate -m "Description of changes"
+```
+
+Docker:
 ```bash
 docker-compose run backend alembic revision --autogenerate -m "Description of changes"
 ```
-Review the generated file in `backend/alembic/versions/` before committing.
 
-## Testing
-
-### End-to-End Tests (Playwright)
-E2E tests verify the full user journey and multi-tenant isolation.
-```bash
-# Ensure the app is running first
-# In a new terminal:
-cd e2e
-npm install
-npx playwright test
-```
-
-### Backend Tests (Pytest)
-```bash
-# Run tests locally (requires python env)
-cd backend
-PYTHONPATH=. pytest
-
-# Or via Docker
-docker-compose run -e PYTHONPATH=. backend pytest
-```
-
-### Frontend Tests (Vitest)
-```bash
-docker-compose run frontend npm run test -- --run
-```
+Review generated files in `backend/alembic/versions/` before committing.
 
 ## Project Structure
 - `backend/`: FastAPI application.

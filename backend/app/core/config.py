@@ -7,7 +7,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@db:5432/riding_school"
     SECRET_KEY: str = "supersecretkey"  # Override in non-dev environments
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 1 week
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # 15 minutes for stateless auth safety
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     ENVIRONMENT: str = "development"
     SECURE_COOKIES: bool = False
     DB_POOL_SIZE: int = 5

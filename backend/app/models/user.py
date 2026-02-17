@@ -1,5 +1,5 @@
 import uuid6
-from sqlalchemy import Boolean, Column, String
+from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Uuid
 
@@ -14,8 +14,6 @@ class User(Base, TimestampMixin):
     hashed_password = Column(String, nullable=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
 
     memberships = relationship(
         "Membership", back_populates="user", cascade="all, delete-orphan"

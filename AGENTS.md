@@ -18,7 +18,20 @@ To start the entire application (Backend on 8000, Frontend on 5173, DB on 5432):
 ```bash
 docker-compose up --build
 ```
-*Note: This is required for E2E tests and full manual verification.*
+*Notes:*
+- *Backend startup runs Alembic migrations automatically via `backend/start.sh` (`alembic upgrade head`) before starting Uvicorn.*
+- *This is required for E2E tests and full manual verification.*
+
+### 1.1 Clean Build Reset (No Data)
+To fully reset Docker state (containers, images, networks, and volumes, including PostgreSQL data):
+```bash
+docker system prune -a --volumes -f
+```
+
+Then rebuild:
+```bash
+docker-compose up --build
+```
 
 ### 2. Backend (Local Development)
 *Prerequisites: Python 3.12, pip*
@@ -32,10 +45,11 @@ pip install -r requirements.txt
 ```
 
 **Linting & Formatting:**
-*Always run before committing.*
+*Always run before committing. Verify changes with `--check`.*
 ```bash
-ruff check .
+ruff check . --fix
 ruff format .
+ruff format --check .
 ```
 
 **Testing:**
@@ -44,6 +58,14 @@ ruff format .
 PYTHONPATH=. pytest
 ```
 *Expected Output: All tests passed. Ignore deprecation warnings.*
+
+**Run API outside Docker:**
+```bash
+# Optional sqlite for local app run
+export DATABASE_URL=sqlite:///./local.db
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
 
 ### 3. Frontend (Local Development)
 *Prerequisites: Node.js (v20+ recommended), npm*
@@ -55,10 +77,11 @@ npm install
 ```
 
 **Linting & Formatting:**
-*Always run before committing.*
+*Always run before committing. Verify changes.*
 ```bash
 npm run lint
 npm run format
+npx prettier --check .
 ```
 
 **Testing (Unit/Component):**
@@ -67,15 +90,47 @@ npm test -- --run
 ```
 
 ### 4. End-to-End Tests
-*Prerequisites: Application running via `docker-compose up`.*
+*Prerequisites (outside Docker): Backend and Frontend running locally at `http://localhost:8000` and `http://localhost:5173`.*
 
-**Run Tests:**
+**Run Tests (outside Docker):**
 ```bash
+# backend terminal
+cd backend
+source venv/bin/activate
+export DATABASE_URL=sqlite:///./local.db
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# frontend terminal
+cd frontend
+npm install
+npm run dev
+
+# e2e terminal
+cd e2e
+npm install
+npx playwright install chromium
+npx playwright test
+```
+*Note: These tests verify critical multi-tenant isolation. If they fail, do NOT merge.*
+
+**Run Tests (Docker one-shot, auto shutdown):**
+```bash
+docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from e2e e2e
+```
+
+**Run Tests (Docker alternative):**
+```bash
+docker-compose up --build
 cd e2e
 npm install
 npx playwright test
 ```
-*Note: These tests verify critical multi-tenant isolation. If they fail, do NOT merge.*
+
+Optional cleanup:
+```bash
+docker compose down -v
+```
 
 ## Project Layout
 
@@ -113,6 +168,7 @@ npx playwright test
 
 3.  **Database & Migrations**:
     - Use SQLAlchemy 2.0 style queries (`db.execute(select(Model)...)` or `db.query(Model)`).
+    - Docker backend startup applies migrations automatically (`alembic upgrade head`) before the API starts.
     - **Migrations**: Any change to `app/models` requires an Alembic migration.
         - Generate: `alembic revision --autogenerate -m "message"`
         - Apply: `alembic upgrade head`

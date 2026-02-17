@@ -57,9 +57,9 @@ def get_current_user(
 
     # Determine school context
     school_id = None
-    if token_data.school_id:
+    if token_data.sid:
         try:
-            school_id = uuid.UUID(token_data.school_id)
+            school_id = uuid.UUID(token_data.sid)
         except ValueError:
             pass
 
@@ -127,21 +127,13 @@ class RequirePermission:
     def __init__(self, required_permission: str):
         self.required_permission = required_permission
 
-    def __call__(self, current_user: User = Depends(get_current_active_school_user)):
-        # Check if user has permission
-        # Use getattr to safely check for current_membership to avoid AttributeError
-        # if it wasn't set (though get_current_user sets it to None or an object)
-        membership = getattr(current_user, "current_membership", None)
-
-        if not membership:
-            # Should be caught by get_current_active_school_user but safe check
-            raise HTTPException(status_code=403, detail="No active membership")
-
-        # Use the property added to Membership
-        user_perms = membership.permissions
-        if self.required_permission not in user_perms:
+    def __call__(
+        self, token_data: TokenPayload = Depends(get_token_payload)
+    ) -> TokenPayload:
+        # Stateless check
+        if self.required_permission not in token_data.perms:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Missing required permission: {self.required_permission}",
             )
-        return current_user
+        return token_data

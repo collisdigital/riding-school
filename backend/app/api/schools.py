@@ -1,11 +1,13 @@
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
+from app.core.auth_helpers import get_user_permissions, set_access_cookie
 from app.db import get_db
 from app.models.membership import Membership, MembershipRole
 from app.models.role import Role
@@ -20,6 +22,7 @@ logger = logging.getLogger(__name__)
 @router.post("/", response_model=SchoolSchema)
 def create_school(
     school_in: SchoolCreate,
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
@@ -59,6 +62,17 @@ def create_school(
 
         db.commit()
         db.refresh(school)
+
+        # Refresh access token so new school context and permissions are available
+        school_id, perms, roles = get_user_permissions(db, current_user.id)
+        access_token = security.create_access_token(
+            current_user.id,
+            school_id=school_id,
+            perms=perms,
+            roles=roles,
+        )
+        set_access_cookie(response, access_token)
+
         return school
 
     except SQLAlchemyError as e:
