@@ -25,7 +25,6 @@ async def test_delete_rider_zero_auth_queries(db_session):
         email="rider@example.com",
         first_name="Rider",
         last_name="One",
-        is_active=True,
         hashed_password="pw",
     )
     db_session.add(rider_user)

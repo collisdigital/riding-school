@@ -30,7 +30,6 @@ async def test_instructor_cannot_delete_rider(db_session):
         hashed_password=hashed_password,
         first_name="Mark",
         last_name="Instructor",
-        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
@@ -89,7 +88,6 @@ async def test_admin_can_delete_rider(db_session):
         hashed_password=hashed_password,
         first_name="Mark",
         last_name="Admin",
-        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
@@ -147,7 +145,6 @@ async def test_school_isolation(db_session):
         hashed_password=hashed_password,
         first_name="Iso",
         last_name="User",
-        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
@@ -235,7 +232,6 @@ async def test_admin_can_update_rider(db_session):
         hashed_password=hashed_password,
         first_name="Mark",
         last_name="Updater",
-        is_active=True,
     )
     db_session.add(user)
     db_session.flush()

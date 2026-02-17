@@ -49,7 +49,6 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         hashed_password=security.get_password_hash(user_in.password),
         first_name=user_in.first_name,
         last_name=user_in.last_name,
-        is_active=True,
     )
     db.add(db_obj)
     try:
@@ -76,9 +75,6 @@ def login(
         or not security.verify_password(form_data.password, user.hashed_password)
     ):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-
-    if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
 
     school_id, perms, roles = get_user_permissions(db, user.id)
 
@@ -146,9 +142,9 @@ def refresh_token(
         )
 
     user = db.get(User, rt_db.user_id)
-    if not user or not user.is_active:
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
 
     school_id, perms, roles = get_user_permissions(db, user.id)

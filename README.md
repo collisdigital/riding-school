@@ -18,6 +18,7 @@ erDiagram
     School ||--o{ Membership : "has"
     User ||--o{ RiderProfile : "has"
     School ||--o{ RiderProfile : "has"
+    User ||--o{ RefreshToken : "has"
 
     Membership ||--o{ MembershipRole : "has"
     Role ||--o{ MembershipRole : "assigned_to"
@@ -31,20 +32,25 @@ erDiagram
         string hashed_password
         string first_name
         string last_name
-        bool is_active
-        bool is_superuser
+        datetime created_at
+        datetime updated_at
     }
 
     School {
         uuid id PK
         string name
         string slug
+        datetime created_at
+        datetime updated_at
     }
 
     Membership {
         uuid id PK
         uuid user_id FK
         uuid school_id FK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
     }
 
     RiderProfile {
@@ -54,6 +60,20 @@ erDiagram
         float height_cm
         float weight_kg
         date date_of_birth
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+    }
+
+    RefreshToken {
+        uuid id PK
+        uuid user_id FK
+        string token_hash
+        datetime expires_at
+        datetime revoked_at
+        string replaced_by
+        datetime created_at
+        datetime updated_at
     }
 
     Role {
@@ -106,6 +126,9 @@ docker-compose up --build
 
 The project uses **Alembic** for database schema migrations.
 
+Current baseline migration history is reset to a single initial revision:
+- `backend/alembic/versions/0001_initial_schema.py`
+
 ### Running Migrations Manually
 If you need to apply migrations manually (e.g., during development without restarting the container):
 ```bash
@@ -120,7 +143,7 @@ alembic upgrade head
 before starting Uvicorn. If migrations fail, the backend container exits and the API does not start with a stale schema.
 
 ### Creating a New Migration
-When you modify SQLAlchemy models in `backend/app/models`, generate a new migration file:
+When you modify SQLAlchemy models in `backend/app/models`, generate a new migration file on top of `0001_initial_schema`:
 ```bash
 docker-compose run backend alembic revision --autogenerate -m "Description of changes"
 ```

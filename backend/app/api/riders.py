@@ -30,7 +30,6 @@ def _resolve_user(db: Session, rider_in: RiderCreate) -> User:
             email=rider_in.email,
             first_name=rider_in.first_name,
             last_name=rider_in.last_name,
-            is_active=True,
             hashed_password=None,  # Managed or Invited later
         )
         db.add(user)

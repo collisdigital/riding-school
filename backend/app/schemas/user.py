@@ -23,8 +23,6 @@ class UserCreate(UserBase):
 
 class UserSchema(UserBase):
     id: UUID
-    is_active: bool
-    is_superuser: bool
 
     model_config = ConfigDict(from_attributes=True)
 

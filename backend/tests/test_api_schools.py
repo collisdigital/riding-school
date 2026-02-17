@@ -20,7 +20,6 @@ async def test_create_school_success(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="No",
         last_name="School",
-        is_active=True,
     )
     db_session.add(user)
     db_session.commit()
@@ -61,7 +60,6 @@ async def test_create_school_already_has_one(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="Has",
         last_name="School",
-        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
@@ -98,14 +96,12 @@ async def test_create_school_duplicate_slug(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="U1",
         last_name="T",
-        is_active=True,
     )
     u2 = User(
         email=email2,
         hashed_password=security.get_password_hash(password),
         first_name="U2",
         last_name="T",
-        is_active=True,
     )
     db_session.add_all([u1, u2])
     db_session.commit()
@@ -152,7 +148,6 @@ async def test_create_school_refreshes_access_token_claims(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="Refresh",
         last_name="Claims",
-        is_active=True,
     )
     db_session.add(user)
     db_session.commit()

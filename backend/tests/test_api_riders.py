@@ -32,7 +32,6 @@ def school_and_admin(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="Admin",
         last_name="Test",
-        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
@@ -120,7 +119,6 @@ async def test_rider_crud_and_isolation(db_session, school_and_admin):
             hashed_password=security.get_password_hash(other_password),
             first_name="Other",
             last_name="User",
-            is_active=True,
         )
         db_session.add(other_user)
         db_session.flush()
@@ -215,7 +213,6 @@ async def test_rider_create_existing_user_link(db_session, school_and_admin):
         email=email,
         first_name="Existing",
         last_name="User",
-        is_active=True,
         hashed_password=security.get_password_hash("pass"),
     )
     db_session.add(pre_user)

@@ -19,7 +19,6 @@ async def test_login_issue_refresh_token(db_session):
         hashed_password=security.get_password_hash(password),
         first_name="Refresh",
         last_name="Test",
-        is_active=True,
     )
     db_session.add(user)
     db_session.flush()
