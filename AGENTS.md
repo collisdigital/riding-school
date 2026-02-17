@@ -114,12 +114,22 @@ npx playwright test
 ```
 *Note: These tests verify critical multi-tenant isolation. If they fail, do NOT merge.*
 
+**Run Tests (Docker one-shot, auto shutdown):**
+```bash
+docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from e2e e2e
+```
+
 **Run Tests (Docker alternative):**
 ```bash
 docker-compose up --build
 cd e2e
 npm install
 npx playwright test
+```
+
+Optional cleanup:
+```bash
+docker compose down -v
 ```
 
 ## Project Layout

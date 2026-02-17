@@ -209,13 +209,23 @@ npx playwright install chromium
 npx playwright test
 ```
 
-Docker alternative:
+Docker one-shot (start stack, run tests, shutdown automatically):
+```bash
+docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from e2e e2e
+```
+
+Docker manual alternative:
 ```bash
 docker-compose up --build
 cd e2e
 npm install
 npx playwright install chromium
 npx playwright test
+```
+
+Cleanup after one-shot/manual Docker runs:
+```bash
+docker compose down -v
 ```
 
 ## Database Management
