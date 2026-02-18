@@ -1,5 +1,7 @@
+from typing import ClassVar
+
 from sqlalchemy import Column, ForeignKey, Integer, String, Table
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Session, relationship
 
 from .base import Base
 
@@ -23,6 +25,28 @@ class Role(Base):
     INSTRUCTOR = "INSTRUCTOR"
     PARENT = "PARENT"
     RIDER = "RIDER"
+
+    # Cache for role IDs to avoid redundant lookups
+    _id_cache: ClassVar[dict[str, int]] = {}
+
+    @classmethod
+    def get_id(cls, db: Session, name: str) -> int | None:
+        """
+        Get role ID by name, using in-memory cache if available.
+        """
+        if name in cls._id_cache:
+            return cls._id_cache[name]
+
+        role = db.query(cls).filter(cls.name == name).first()
+        if role:
+            cls._id_cache[name] = role.id
+            return role.id
+        return None
+
+    @classmethod
+    def clear_cache(cls):
+        """Clear the role ID cache."""
+        cls._id_cache.clear()
 
     membership_roles = relationship("MembershipRole", back_populates="role")
     permissions = relationship(

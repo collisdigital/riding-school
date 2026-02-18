@@ -61,23 +61,26 @@ def _ensure_membership(
 
 def _assign_rider_role(db: Session, membership_id: uuid.UUID) -> None:
     """Ensure membership has the RIDER role."""
-    rider_role = db.query(Role).filter(Role.name == Role.RIDER).first()
-    if not rider_role:
-        # Fallback/Seed
+    # Get Rider Role ID (Optimized with Cache)
+    rider_role_id = Role.get_id(db, Role.RIDER)
+    if not rider_role_id:
+        # Fallback Seed if missing
         rider_role = Role(name=Role.RIDER, description="Student Rider")
         db.add(rider_role)
         db.flush()
+        rider_role_id = rider_role.id
+        Role._id_cache[Role.RIDER] = rider_role_id
 
     has_role = (
         db.query(MembershipRole)
         .filter(
             MembershipRole.membership_id == membership_id,
-            MembershipRole.role_id == rider_role.id,
+            MembershipRole.role_id == rider_role_id,
         )
         .first()
     )
     if not has_role:
-        mem_role = MembershipRole(membership_id=membership_id, role_id=rider_role.id)
+        mem_role = MembershipRole(membership_id=membership_id, role_id=rider_role_id)
         db.add(mem_role)
 
 
