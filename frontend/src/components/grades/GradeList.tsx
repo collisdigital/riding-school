@@ -42,6 +42,8 @@ function SortableGradeItem({ grade, isSelected, onSelect, onDelete }: SortableGr
     transition,
   }
 
+  const skillCount = grade.skills ? grade.skills.length : 0
+
   return (
     <div
       ref={setNodeRef}
@@ -60,7 +62,17 @@ function SortableGradeItem({ grade, isSelected, onSelect, onDelete }: SortableGr
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="font-medium text-gray-900 truncate">{grade.name}</h3>
-        {grade.description && <p className="text-xs text-gray-500 truncate">{grade.description}</p>}
+        <div className="flex items-center text-xs text-gray-500 space-x-2">
+          <span>
+            {skillCount} {skillCount === 1 ? 'skill' : 'skills'}
+          </span>
+          {grade.description && (
+            <>
+              <span>•</span>
+              <span className="truncate max-w-[150px]">{grade.description}</span>
+            </>
+          )}
+        </div>
       </div>
       <button
         onClick={(e) => {

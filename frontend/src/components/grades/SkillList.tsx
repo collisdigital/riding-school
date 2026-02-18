@@ -1,13 +1,17 @@
-import React from 'react'
-import { CheckCircle2, Plus } from 'lucide-react'
-import type { Grade } from '../../types'
+import React, { useState } from 'react'
+import { CheckCircle2, Plus, Pencil, Trash2 } from 'lucide-react'
+import type { Grade, Skill } from '../../types'
 
 interface SkillListProps {
   grade: Grade
   onAddSkill: () => void
+  onEditSkill: (skill: Skill) => void
+  onDeleteSkill: (skill: Skill) => void
 }
 
-export function SkillList({ grade, onAddSkill }: SkillListProps) {
+export function SkillList({ grade, onAddSkill, onEditSkill, onDeleteSkill }: SkillListProps) {
+  const [hoveredSkill, setHoveredSkill] = useState<string | null>(null)
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-full flex flex-col">
       <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
@@ -30,14 +34,41 @@ export function SkillList({ grade, onAddSkill }: SkillListProps) {
             {grade.skills.map((skill) => (
               <div
                 key={skill.id}
-                className="flex items-start p-4 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-100 transition-colors"
+                className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-100 transition-colors group"
+                onMouseEnter={() => setHoveredSkill(skill.id)}
+                onMouseLeave={() => setHoveredSkill(null)}
               >
-                <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-gray-900">{skill.name}</h3>
-                  {skill.description && (
-                    <p className="text-sm text-gray-500 mt-1">{skill.description}</p>
-                  )}
+                <div className="flex items-start">
+                  <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-gray-900">{skill.name}</h3>
+                    {skill.description && (
+                      <p className="text-sm text-gray-500 mt-1">{skill.description}</p>
+                    )}
+                  </div>
+                </div>
+                <div
+                  className={`flex space-x-2 ${hoveredSkill === skill.id ? 'opacity-100' : 'opacity-0'} transition-opacity`}
+                >
+                  <button
+                    onClick={() => onEditSkill(skill)}
+                    className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                    aria-label="Edit skill"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (confirm('Are you sure you want to delete this skill?')) {
+                        onDeleteSkill(skill)
+                      }
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                    aria-label="Delete skill"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             ))}

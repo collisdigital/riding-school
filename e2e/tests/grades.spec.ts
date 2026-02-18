@@ -1,12 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test('grades curriculum builder', async ({ page }) => {
-  // Handle dialogs
-  page.on('dialog', dialog => {
-    console.log(`DIALOG: ${dialog.type()} - ${dialog.message()}`);
-    dialog.accept();
-  });
-
   const email = `owner-grades-${Math.random().toString(36).substring(7)}@example.com`;
 
   // 1. Register and Create School
@@ -61,18 +55,36 @@ test('grades curriculum builder', async ({ page }) => {
   // Use specific submit button for skill modal to avoid confusion
   await page.locator('form').getByRole('button', { name: 'Add Skill' }).click();
 
+  // Verify Skill added and count updated
   await expect(page.locator('h3:text("Walk")')).toBeVisible();
+  // Check "1 skill" text in the grade list item (target specific div structure if needed, or just text)
+  // Use .last() to find the Grade Item in the sidebar (most specific) or target by class if possible
+  // GradeList item: flex items-center p-3 mb-2 bg-white rounded-lg border...
+  // We can target the sidebar container explicitly.
+  const gradeItem = page.locator('div').filter({ hasText: 'Level 1' }).filter({ hasText: '1 skill' });
+  await expect(gradeItem.first()).toBeVisible();
 
-  // 6. Delete Level 2 (Skip for now due to persistent CI environment timeout issues)
-  // The dialog logic works locally but deletion verification times out in constrained env.
-  /*
-  const deleteBtn = page.locator('div')
-    .filter({ has: page.locator('h3:text("Level 2")') })
-    .locator('button[aria-label="Delete grade"]')
-    .first();
+  // 6. Edit Skill
+  // Target the skill row specifically using the group class we added
+  const skillRow = page.locator('.group').filter({ has: page.locator('h3:text("Walk")') }).first();
+  await skillRow.hover();
+  await skillRow.getByLabel('Edit skill').click();
 
-  await deleteBtn.click({ force: true });
-  await expect(page.locator('h3:text("Level 2")')).not.toBeVisible();
-  await expect(page.locator('h3:text("Level 1")')).toBeVisible();
-  */
+  await expect(page.getByText('Edit Skill')).toBeVisible();
+  await page.fill('input[value="Walk"]', 'Walk (Modified)');
+  await page.locator('form').getByRole('button', { name: 'Save Changes' }).click();
+
+  await expect(page.locator('h3:text("Walk (Modified)")')).toBeVisible();
+
+  // 7. Delete Skill
+  page.on('dialog', dialog => dialog.accept());
+  // Re-acquire row as text changed
+  const skillRowMod = page.locator('.group').filter({ has: page.locator('h3:text("Walk (Modified)")') }).first();
+  await skillRowMod.hover();
+  await skillRowMod.getByLabel('Delete skill').click();
+
+  await expect(page.locator('h3:text("Walk (Modified)")')).not.toBeVisible();
+  // Check "0 skills" text
+  const gradeItemZero = page.locator('div').filter({ hasText: 'Level 1' }).filter({ hasText: '0 skills' });
+  await expect(gradeItemZero.first()).toBeVisible();
 });

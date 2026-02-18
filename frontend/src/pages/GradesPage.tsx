@@ -4,7 +4,7 @@ import { Plus, GripVertical } from 'lucide-react'
 import { GradeList } from '../components/grades/GradeList'
 import { SkillList } from '../components/grades/SkillList'
 import { Modal } from '../components/Modal'
-import type { Grade, GradeCreate, SkillCreate } from '../types'
+import type { Grade, GradeCreate, SkillCreate, Skill } from '../types'
 
 export default function GradesPage() {
   const [grades, setGrades] = useState<Grade[]>([])
@@ -15,6 +15,7 @@ export default function GradesPage() {
   // Modals state
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false)
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false)
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null)
 
   // Form state
   const [gradeName, setGradeName] = useState('')
@@ -28,8 +29,6 @@ export default function GradesPage() {
       const res = await axios.get('/api/grades/')
       setGrades(res.data)
       if (res.data.length > 0) {
-        // Only set if not already set, or if current selection is invalid?
-        // Actually, let's preserve selection if possible, else select first
         setSelectedGradeId((prev) => {
           if (prev && res.data.some((g: Grade) => g.id === prev)) return prev
           return res.data[0].id
@@ -78,27 +77,82 @@ export default function GradesPage() {
     }
   }
 
-  const handleCreateSkill = async (e: React.FormEvent) => {
+  const handleSaveSkill = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!skillName.trim() || !selectedGradeId) return
 
     try {
       const payload: SkillCreate = { name: skillName, description: skillDesc }
-      const res = await axios.post(`/api/grades/${selectedGradeId}/skills`, payload)
 
-      const newGrades = grades.map((g) => {
-        if (g.id === selectedGradeId) {
-          return { ...g, skills: [...(g.skills || []), res.data] }
-        }
-        return g
-      })
-      setGrades(newGrades)
+      if (editingSkill) {
+        // Update existing skill
+        const res = await axios.put(`/api/grades/skills/${editingSkill.id}`, payload)
+        const updatedSkill = res.data
+
+        const newGrades = grades.map((g) => {
+          if (g.id === selectedGradeId) {
+            return {
+              ...g,
+              skills: g.skills.map((s) => (s.id === updatedSkill.id ? updatedSkill : s)),
+            }
+          }
+          return g
+        })
+        setGrades(newGrades)
+      } else {
+        // Create new skill
+        const res = await axios.post(`/api/grades/${selectedGradeId}/skills`, payload)
+        const newSkill = res.data
+
+        const newGrades = grades.map((g) => {
+          if (g.id === selectedGradeId) {
+            return { ...g, skills: [...(g.skills || []), newSkill] }
+          }
+          return g
+        })
+        setGrades(newGrades)
+      }
+
       setIsSkillModalOpen(false)
+      setEditingSkill(null)
       setSkillName('')
       setSkillDesc('')
     } catch (err) {
       console.error(err)
-      alert('Failed to add skill')
+      alert(editingSkill ? 'Failed to update skill' : 'Failed to add skill')
+    }
+  }
+
+  const openAddSkillModal = () => {
+    setEditingSkill(null)
+    setSkillName('')
+    setSkillDesc('')
+    setIsSkillModalOpen(true)
+  }
+
+  const openEditSkillModal = (skill: Skill) => {
+    setEditingSkill(skill)
+    setSkillName(skill.name)
+    setSkillDesc(skill.description || '')
+    setIsSkillModalOpen(true)
+  }
+
+  const handleDeleteSkill = async (skill: Skill) => {
+    try {
+      await axios.delete(`/api/grades/skills/${skill.id}`)
+      const newGrades = grades.map((g) => {
+        if (g.id === skill.grade_id) {
+          return {
+            ...g,
+            skills: g.skills.filter((s) => s.id !== skill.id),
+          }
+        }
+        return g
+      })
+      setGrades(newGrades)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to delete skill')
     }
   }
 
@@ -112,7 +166,11 @@ export default function GradesPage() {
       }
     } catch (err) {
       console.error(err)
-      alert('Failed to delete grade')
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        alert('Cannot delete grade: It is assigned to riders (past or present).')
+      } else {
+        alert('Failed to delete grade')
+      }
     }
   }
 
@@ -166,7 +224,12 @@ export default function GradesPage() {
         {/* Main Panel: Skills */}
         <div className="w-2/3 flex flex-col h-full overflow-hidden">
           {selectedGrade ? (
-            <SkillList grade={selectedGrade} onAddSkill={() => setIsSkillModalOpen(true)} />
+            <SkillList
+              grade={selectedGrade}
+              onAddSkill={openAddSkillModal}
+              onEditSkill={openEditSkillModal}
+              onDeleteSkill={handleDeleteSkill}
+            />
           ) : (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 h-full flex flex-col items-center justify-center text-gray-400">
               <div className="p-6 bg-gray-50 rounded-full mb-4">
@@ -225,13 +288,13 @@ export default function GradesPage() {
         </form>
       </Modal>
 
-      {/* Add Skill Modal */}
+      {/* Add/Edit Skill Modal */}
       <Modal
         isOpen={isSkillModalOpen}
         onClose={() => setIsSkillModalOpen(false)}
-        title={`Add Skill to ${selectedGrade?.name || ''}`}
+        title={editingSkill ? 'Edit Skill' : `Add Skill to ${selectedGrade?.name || ''}`}
       >
-        <form onSubmit={handleCreateSkill} className="space-y-4">
+        <form onSubmit={handleSaveSkill} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Skill Name</label>
             <input
@@ -265,7 +328,7 @@ export default function GradesPage() {
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm"
             >
-              Add Skill
+              {editingSkill ? 'Save Changes' : 'Add Skill'}
             </button>
           </div>
         </form>
