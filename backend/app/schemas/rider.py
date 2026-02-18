@@ -22,6 +22,10 @@ class RiderUpdate(BaseModel):
     date_of_birth: date | None = None
 
 
+class RiderGradeUpdate(BaseModel):
+    grade_id: UUID
+
+
 class RiderResponse(BaseModel):
     id: UUID  # RiderProfile ID
     user_id: UUID

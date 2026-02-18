@@ -19,6 +19,9 @@ class RiderProfile(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
 
     user = relationship("User", back_populates="rider_profiles")
     school = relationship("School", back_populates="rider_profiles")
+    grade_history = relationship(
+        "RiderGradeHistory", back_populates="rider", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<RiderProfile(id='{self.id}')>"

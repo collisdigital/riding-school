@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from .api import auth, riders, schools
+from .api import auth, grades, riders, schools
 from .core.config import settings
 from .core.middleware import SecurityHeadersMiddleware
 from .core.seed import seed_rbac
@@ -38,6 +38,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(schools.router, prefix="/api/schools", tags=["schools"])
 app.include_router(riders.router, prefix="/api/riders", tags=["riders"])
+app.include_router(grades.router, prefix="/api/grades", tags=["grades"])
 
 
 @app.get("/")
