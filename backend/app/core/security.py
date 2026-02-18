@@ -72,4 +72,4 @@ def get_token_hash(token: str) -> str:
 
 
 def verify_token_hash(token: str, token_hash: str) -> bool:
-    return get_token_hash(token) == token_hash
+    return secrets.compare_digest(get_token_hash(token), token_hash)
