@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, addConsoleListener } from '../fixtures';
 
 test('parent-child relationship isolation test', async ({ browser }) => {
   const emailParent = `parent-${Math.random().toString(36).substring(7)}@example.com`;
@@ -6,6 +6,7 @@ test('parent-child relationship isolation test', async ({ browser }) => {
   const emailOther = `other-${Math.random().toString(36).substring(7)}@example.com`;
 
   const contextAdmin = await browser.newContext();
+  contextAdmin.on('page', page => addConsoleListener(page));
   const pageAdmin = await contextAdmin.newPage();
 
   // 1. Admin registers and creates school

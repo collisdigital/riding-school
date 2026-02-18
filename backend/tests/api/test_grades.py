@@ -48,6 +48,7 @@ def school_and_admin(db_session):
 
     return school, user, password
 
+
 @pytest.mark.asyncio
 async def test_grades_crud(db_session, school_and_admin):
     school, admin, password = school_and_admin
@@ -55,13 +56,19 @@ async def test_grades_crud(db_session, school_and_admin):
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         # Login
-        login_res = await ac.post("/api/auth/login", data={"username": admin.email, "password": password})
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": admin.email, "password": password}
+        )
         assert login_res.status_code == 200
         token = login_res.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
         # 1. Create Grade
-        res = await ac.post("/api/grades/", json={"name": "Grade 1", "description": "Beginner"}, headers=headers)
+        res = await ac.post(
+            "/api/grades/",
+            json={"name": "Grade 1", "description": "Beginner"},
+            headers=headers,
+        )
         assert res.status_code == 200
         grade1 = res.json()
         assert grade1["name"] == "Grade 1"
@@ -73,7 +80,9 @@ async def test_grades_crud(db_session, school_and_admin):
         assert grade2["sequence_order"] == 1
 
         # 3. Add Skill
-        res = await ac.post(f"/api/grades/{grade1['id']}/skills", json={"name": "Walk"}, headers=headers)
+        res = await ac.post(
+            f"/api/grades/{grade1['id']}/skills", json={"name": "Walk"}, headers=headers
+        )
         assert res.status_code == 200
         skill = res.json()
         assert skill["name"] == "Walk"
@@ -88,7 +97,11 @@ async def test_grades_crud(db_session, school_and_admin):
 
         # 5. Reorder
         # Swap: [Grade 2, Grade 1]
-        res = await ac.patch("/api/grades/reorder", json={"ordered_ids": [grade2["id"], grade1["id"]]}, headers=headers)
+        res = await ac.patch(
+            "/api/grades/reorder",
+            json={"ordered_ids": [grade2["id"], grade1["id"]]},
+            headers=headers,
+        )
         assert res.status_code == 204
 
         # Verify order
@@ -108,13 +121,16 @@ async def test_grades_crud(db_session, school_and_admin):
         assert len(grades) == 1
         assert grades[0]["id"] == grade1["id"]
 
+
 @pytest.mark.asyncio
 async def test_rider_grade_assignment(db_session, school_and_admin):
     school, admin, password = school_and_admin
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        login_res = await ac.post("/api/auth/login", data={"username": admin.email, "password": password})
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": admin.email, "password": password}
+        )
         token = login_res.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -123,15 +139,27 @@ async def test_rider_grade_assignment(db_session, school_and_admin):
         grade_id = g_res.json()["id"]
 
         # Create Rider
-        r_res = await ac.post("/api/riders/", json={"first_name": "Rider", "last_name": "One"}, headers=headers)
+        r_res = await ac.post(
+            "/api/riders/",
+            json={"first_name": "Rider", "last_name": "One"},
+            headers=headers,
+        )
         rider_id = r_res.json()["id"]
 
         # Assign Grade
-        res = await ac.patch(f"/api/riders/{rider_id}/grade", json={"grade_id": grade_id}, headers=headers)
+        res = await ac.patch(
+            f"/api/riders/{rider_id}/grade",
+            json={"grade_id": grade_id},
+            headers=headers,
+        )
         assert res.status_code == 204
 
         # Move to same grade (idempotent/no-op)
-        res = await ac.patch(f"/api/riders/{rider_id}/grade", json={"grade_id": grade_id}, headers=headers)
+        res = await ac.patch(
+            f"/api/riders/{rider_id}/grade",
+            json={"grade_id": grade_id},
+            headers=headers,
+        )
         assert res.status_code == 204
 
         # Create Grade 2
@@ -139,8 +167,13 @@ async def test_rider_grade_assignment(db_session, school_and_admin):
         grade2_id = g2_res.json()["id"]
 
         # Move to Grade 2
-        res = await ac.patch(f"/api/riders/{rider_id}/grade", json={"grade_id": grade2_id}, headers=headers)
+        res = await ac.patch(
+            f"/api/riders/{rider_id}/grade",
+            json={"grade_id": grade2_id},
+            headers=headers,
+        )
         assert res.status_code == 204
+
 
 @pytest.mark.asyncio
 async def test_skill_crud(db_session, school_and_admin):
@@ -148,7 +181,9 @@ async def test_skill_crud(db_session, school_and_admin):
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        login_res = await ac.post("/api/auth/login", data={"username": admin.email, "password": password})
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": admin.email, "password": password}
+        )
         token = login_res.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -157,12 +192,18 @@ async def test_skill_crud(db_session, school_and_admin):
         grade_id = g_res.json()["id"]
 
         # Create Skill
-        s_res = await ac.post(f"/api/grades/{grade_id}/skills", json={"name": "Jump"}, headers=headers)
+        s_res = await ac.post(
+            f"/api/grades/{grade_id}/skills", json={"name": "Jump"}, headers=headers
+        )
         assert s_res.status_code == 200
         skill_id = s_res.json()["id"]
 
         # Update Skill
-        u_res = await ac.put(f"/api/grades/skills/{skill_id}", json={"name": "Jump High", "description": "Over 1m"}, headers=headers)
+        u_res = await ac.put(
+            f"/api/grades/skills/{skill_id}",
+            json={"name": "Jump High", "description": "Over 1m"},
+            headers=headers,
+        )
         assert u_res.status_code == 200
         assert u_res.json()["name"] == "Jump High"
         assert u_res.json()["description"] == "Over 1m"
@@ -176,23 +217,34 @@ async def test_skill_crud(db_session, school_and_admin):
         grade = list_res.json()[0]
         assert len(grade["skills"]) == 0
 
+
 @pytest.mark.asyncio
 async def test_delete_grade_protection(db_session, school_and_admin):
     school, admin, password = school_and_admin
     transport = ASGITransport(app=app)
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        login_res = await ac.post("/api/auth/login", data={"username": admin.email, "password": password})
+        login_res = await ac.post(
+            "/api/auth/login", data={"username": admin.email, "password": password}
+        )
         headers = {"Authorization": f"Bearer {login_res.json()['access_token']}"}
 
         # Create Grade & Rider
         g_res = await ac.post("/api/grades/", json={"name": "G1"}, headers=headers)
         grade_id = g_res.json()["id"]
-        r_res = await ac.post("/api/riders/", json={"first_name": "R1", "last_name": "L1"}, headers=headers)
+        r_res = await ac.post(
+            "/api/riders/",
+            json={"first_name": "R1", "last_name": "L1"},
+            headers=headers,
+        )
         rider_id = r_res.json()["id"]
 
         # Assign Grade
-        await ac.patch(f"/api/riders/{rider_id}/grade", json={"grade_id": grade_id}, headers=headers)
+        await ac.patch(
+            f"/api/riders/{rider_id}/grade",
+            json={"grade_id": grade_id},
+            headers=headers,
+        )
 
         # Attempt Delete
         del_res = await ac.delete(f"/api/grades/{grade_id}", headers=headers)

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, addConsoleListener } from '../fixtures';
 
 test('full user journey: register -> create school -> dashboard', async ({ page }) => {
   // Debug: Capture console logs
@@ -39,6 +39,7 @@ test('multi-tenant leak test', async ({ browser }) => {
 
   // Context A: Create School A and a Rider
   const contextA = await browser.newContext();
+  contextA.on('page', page => addConsoleListener(page));
   const pageA = await contextA.newPage();
   
   await pageA.goto('/register');
@@ -55,6 +56,7 @@ test('multi-tenant leak test', async ({ browser }) => {
 
   // Context B: Create School B
   const contextB = await browser.newContext();
+  contextB.on('page', page => addConsoleListener(page));
   const pageB = await contextB.newPage();
   
   await pageB.goto('/register');
