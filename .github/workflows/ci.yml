@@ -57,6 +57,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Clean up stale Docker resources
+        run: |
+          docker compose down --remove-orphans -v 2>/dev/null || true
+          docker network prune -f
       - name: Run Docker Compose
         run: docker compose up -d
       - name: Wait for services
@@ -64,7 +68,8 @@ jobs:
           timeout 60s bash -c 'until curl -s http://localhost:8000/health; do sleep 2; done'
       - name: Run E2E tests
         run: |
-          docker run --rm --network host --ipc=host \
+          docker run --rm --network riding-school-net --ipc=host \
+            -e PLAYWRIGHT_BASE_URL=http://frontend:5173 \
             -v ${{ github.workspace }}:/work -w /work/e2e \
             mcr.microsoft.com/playwright:v1.58.2-jammy \
             bash -lc "npm ci && npx playwright test"
