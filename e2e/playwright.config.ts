@@ -9,7 +9,10 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
-    trace: 'on-first-retry',
+    // Retain traces on failure for debugging
+    trace: 'retain-on-failure',
+    // Capture screenshots only on failure
+    screenshot: 'only-on-failure',
     headless: true,
   },
   projects: [
