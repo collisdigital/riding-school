@@ -145,19 +145,7 @@ def create_rider(
         raise HTTPException(status_code=500, detail="Failed to create rider") from None
 
     db.refresh(profile)
-
-    # Construct response
-    return RiderResponse(
-        id=profile.id,
-        user_id=user.id,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        email=user.email,
-        height_cm=profile.height_cm,
-        weight_kg=profile.weight_kg,
-        date_of_birth=profile.date_of_birth,
-        school_id=school_id,
-    )
+    return profile
 
 
 @router.get("/", response_model=list[RiderResponse])
@@ -181,23 +169,7 @@ def list_riders(
         .all()
     )
 
-    # Map to schema
-    results = []
-    for p in profiles:
-        results.append(
-            RiderResponse(
-                id=p.id,
-                user_id=p.user_id,
-                first_name=p.user.first_name,
-                last_name=p.user.last_name,
-                email=p.user.email,
-                height_cm=p.height_cm,
-                weight_kg=p.weight_kg,
-                date_of_birth=p.date_of_birth,
-                school_id=p.school_id,
-            )
-        )
-    return results
+    return profiles
 
 
 @router.get("/{rider_id}", response_model=RiderResponse)
@@ -217,24 +189,14 @@ def get_rider(
 
     profile = (
         db.query(RiderProfile)
-        .join(User)
+        .options(joinedload(RiderProfile.user))
         .filter(RiderProfile.id == r_id, RiderProfile.school_id == school_id)
         .first()
     )
     if not profile:
         raise HTTPException(status_code=404, detail="Rider not found")
 
-    return RiderResponse(
-        id=profile.id,
-        user_id=profile.user_id,
-        first_name=profile.user.first_name,
-        last_name=profile.user.last_name,
-        email=profile.user.email,
-        height_cm=profile.height_cm,
-        weight_kg=profile.weight_kg,
-        date_of_birth=profile.date_of_birth,
-        school_id=profile.school_id,
-    )
+    return profile
 
 
 def _update_user_fields(db: Session, user: User, rider_in: RiderUpdate) -> None:
@@ -276,7 +238,7 @@ def update_rider(
 
     profile = (
         db.query(RiderProfile)
-        .join(User)
+        .options(joinedload(RiderProfile.user))
         .filter(RiderProfile.id == r_id, RiderProfile.school_id == school_id)
         .first()
     )
@@ -293,17 +255,7 @@ def update_rider(
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to update rider") from None
 
-    return RiderResponse(
-        id=profile.id,
-        user_id=profile.user_id,
-        first_name=profile.user.first_name,
-        last_name=profile.user.last_name,
-        email=profile.user.email,
-        height_cm=profile.height_cm,
-        weight_kg=profile.weight_kg,
-        date_of_birth=profile.date_of_birth,
-        school_id=profile.school_id,
-    )
+    return profile
 
 
 @router.delete("/{rider_id}", status_code=status.HTTP_204_NO_CONTENT)
