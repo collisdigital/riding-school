@@ -1,125 +1,126 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
-import { Plus, GripVertical } from 'lucide-react';
-import { GradeList } from '../components/grades/GradeList';
-import { SkillList } from '../components/grades/SkillList';
-import { Modal } from '../components/Modal';
-import type { Grade, GradeCreate, SkillCreate } from '../types';
+import React, { useEffect, useState, useCallback } from 'react'
+import axios from 'axios'
+import { Plus, GripVertical } from 'lucide-react'
+import { GradeList } from '../components/grades/GradeList'
+import { SkillList } from '../components/grades/SkillList'
+import { Modal } from '../components/Modal'
+import type { Grade, GradeCreate, SkillCreate } from '../types'
 
 export default function GradesPage() {
-  const [grades, setGrades] = useState<Grade[]>([]);
-  const [selectedGradeId, setSelectedGradeId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [grades, setGrades] = useState<Grade[]>([])
+  const [selectedGradeId, setSelectedGradeId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Modals state
-  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
-  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
+  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false)
+  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false)
 
   // Form state
-  const [gradeName, setGradeName] = useState('');
-  const [gradeDesc, setGradeDesc] = useState('');
-  const [skillName, setSkillName] = useState('');
-  const [skillDesc, setSkillDesc] = useState('');
+  const [gradeName, setGradeName] = useState('')
+  const [gradeDesc, setGradeDesc] = useState('')
+  const [skillName, setSkillName] = useState('')
+  const [skillDesc, setSkillDesc] = useState('')
 
   const fetchGrades = useCallback(async () => {
     try {
-      setLoading(true);
-      const res = await axios.get('/api/grades/');
-      setGrades(res.data);
+      setLoading(true)
+      const res = await axios.get('/api/grades/')
+      setGrades(res.data)
       if (res.data.length > 0) {
         // Only set if not already set, or if current selection is invalid?
         // Actually, let's preserve selection if possible, else select first
         setSelectedGradeId((prev) => {
-            if (prev && res.data.some((g: Grade) => g.id === prev)) return prev;
-            return res.data[0].id;
-        });
+          if (prev && res.data.some((g: Grade) => g.id === prev)) return prev
+          return res.data[0].id
+        })
       }
     } catch (err) {
-      console.error(err);
-      setError('Failed to load grades');
+      console.error(err)
+      setError('Failed to load grades')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    fetchGrades();
-  }, [fetchGrades]);
+    fetchGrades()
+  }, [fetchGrades])
 
   const handleReorder = async (newGrades: Grade[]) => {
-    const originalGrades = [...grades];
-    setGrades(newGrades);
+    const originalGrades = [...grades]
+    setGrades(newGrades)
     try {
       await axios.patch('/api/grades/reorder', {
         ordered_ids: newGrades.map((g) => g.id),
-      });
+      })
     } catch (err) {
-      console.error('Failed to save order', err);
-      setGrades(originalGrades); // Revert
+      console.error('Failed to save order', err)
+      setGrades(originalGrades) // Revert
     }
-  };
+  }
 
   const handleCreateGrade = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!gradeName.trim()) return;
+    e.preventDefault()
+    if (!gradeName.trim()) return
 
     try {
-      const payload: GradeCreate = { name: gradeName, description: gradeDesc };
-      const res = await axios.post('/api/grades/', payload);
-      setGrades([...grades, res.data]);
-      setSelectedGradeId(res.data.id);
-      setIsGradeModalOpen(false);
-      setGradeName('');
-      setGradeDesc('');
+      const payload: GradeCreate = { name: gradeName, description: gradeDesc }
+      const res = await axios.post('/api/grades/', payload)
+      setGrades([...grades, res.data])
+      setSelectedGradeId(res.data.id)
+      setIsGradeModalOpen(false)
+      setGradeName('')
+      setGradeDesc('')
     } catch (err) {
-      console.error(err);
-      alert('Failed to create grade');
+      console.error(err)
+      alert('Failed to create grade')
     }
-  };
+  }
 
   const handleCreateSkill = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!skillName.trim() || !selectedGradeId) return;
+    e.preventDefault()
+    if (!skillName.trim() || !selectedGradeId) return
 
     try {
-      const payload: SkillCreate = { name: skillName, description: skillDesc };
-      const res = await axios.post(`/api/grades/${selectedGradeId}/skills`, payload);
+      const payload: SkillCreate = { name: skillName, description: skillDesc }
+      const res = await axios.post(`/api/grades/${selectedGradeId}/skills`, payload)
 
-      const newGrades = grades.map(g => {
+      const newGrades = grades.map((g) => {
         if (g.id === selectedGradeId) {
-          return { ...g, skills: [...(g.skills || []), res.data] };
+          return { ...g, skills: [...(g.skills || []), res.data] }
         }
-        return g;
-      });
-      setGrades(newGrades);
-      setIsSkillModalOpen(false);
-      setSkillName('');
-      setSkillDesc('');
+        return g
+      })
+      setGrades(newGrades)
+      setIsSkillModalOpen(false)
+      setSkillName('')
+      setSkillDesc('')
     } catch (err) {
-      console.error(err);
-      alert('Failed to add skill');
+      console.error(err)
+      alert('Failed to add skill')
     }
-  };
+  }
 
   const handleDeleteGrade = async (gradeId: string) => {
     try {
-      await axios.delete(`/api/grades/${gradeId}`);
-      const newGrades = grades.filter(g => g.id !== gradeId);
-      setGrades(newGrades);
+      await axios.delete(`/api/grades/${gradeId}`)
+      const newGrades = grades.filter((g) => g.id !== gradeId)
+      setGrades(newGrades)
       if (selectedGradeId === gradeId) {
-        setSelectedGradeId(newGrades.length > 0 ? newGrades[0].id : null);
+        setSelectedGradeId(newGrades.length > 0 ? newGrades[0].id : null)
       }
     } catch (err) {
-      console.error(err);
-      alert('Failed to delete grade');
+      console.error(err)
+      alert('Failed to delete grade')
     }
-  };
+  }
 
-  const selectedGrade = grades.find(g => g.id === selectedGradeId);
+  const selectedGrade = grades.find((g) => g.id === selectedGradeId)
 
-  if (loading && grades.length === 0) return <div className="p-8 text-center text-gray-500">Loading curriculum...</div>;
-  if (error) return <div className="p-8 text-red-500 text-center">{error}</div>;
+  if (loading && grades.length === 0)
+    return <div className="p-8 text-center text-gray-500">Loading curriculum...</div>
+  if (error) return <div className="p-8 text-red-500 text-center">{error}</div>
 
   return (
     <div className="p-8 h-full flex flex-col max-h-screen overflow-hidden">
@@ -164,17 +165,17 @@ export default function GradesPage() {
 
         {/* Main Panel: Skills */}
         <div className="w-2/3 flex flex-col h-full overflow-hidden">
-           {selectedGrade ? (
-             <SkillList grade={selectedGrade} onAddSkill={() => setIsSkillModalOpen(true)} />
-           ) : (
-             <div className="bg-white rounded-xl shadow-sm border border-gray-100 h-full flex flex-col items-center justify-center text-gray-400">
-               <div className="p-6 bg-gray-50 rounded-full mb-4">
-                 <GripVertical size={48} className="text-gray-300" />
-               </div>
-               <p className="text-lg font-medium">Select a grade to manage skills</p>
-               <p className="text-sm mt-1">Or create a new one</p>
-             </div>
-           )}
+          {selectedGrade ? (
+            <SkillList grade={selectedGrade} onAddSkill={() => setIsSkillModalOpen(true)} />
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 h-full flex flex-col items-center justify-center text-gray-400">
+              <div className="p-6 bg-gray-50 rounded-full mb-4">
+                <GripVertical size={48} className="text-gray-300" />
+              </div>
+              <p className="text-lg font-medium">Select a grade to manage skills</p>
+              <p className="text-sm mt-1">Or create a new one</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -270,5 +271,5 @@ export default function GradesPage() {
         </form>
       </Modal>
     </div>
-  );
+  )
 }

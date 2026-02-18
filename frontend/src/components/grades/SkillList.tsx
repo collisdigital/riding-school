@@ -1,10 +1,10 @@
-import React from 'react';
-import { CheckCircle2, Plus } from 'lucide-react';
-import type { Grade } from '../../types';
+import React from 'react'
+import { CheckCircle2, Plus } from 'lucide-react'
+import type { Grade } from '../../types'
 
 interface SkillListProps {
-  grade: Grade;
-  onAddSkill: () => void;
+  grade: Grade
+  onAddSkill: () => void
 }
 
 export function SkillList({ grade, onAddSkill }: SkillListProps) {
@@ -50,5 +50,5 @@ export function SkillList({ grade, onAddSkill }: SkillListProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

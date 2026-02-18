@@ -1,15 +1,15 @@
-import React, { ReactNode } from 'react';
-import { X } from 'lucide-react';
+import React, { ReactNode } from 'react'
+import { X } from 'lucide-react'
 
 interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: ReactNode;
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  children: ReactNode
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen) return null
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative animate-in fade-in zoom-in duration-200">
@@ -22,5 +22,5 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         {children}
       </div>
     </div>
-  );
+  )
 }

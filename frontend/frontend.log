@@ -7,3 +7,7 @@
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.0.2:5173/
+12:14:43 PM [vite] (client) hmr update /src/components/grades/GradeList.tsx, /src/index.css
+12:14:43 PM [vite] (client) hmr update /src/components/grades/SkillList.tsx, /src/index.css
+12:14:43 PM [vite] (client) hmr update /src/components/Modal.tsx, /src/index.css
+12:14:43 PM [vite] (client) hmr update /src/pages/GradesPage.tsx, /src/index.css

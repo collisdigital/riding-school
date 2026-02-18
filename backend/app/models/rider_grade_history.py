@@ -23,4 +23,7 @@ class RiderGradeHistory(Base, TenantMixin, TimestampMixin):
     school = relationship("School", back_populates="rider_grade_history")
 
     def __repr__(self):
-        return f"<RiderGradeHistory(id='{self.id}', rider_id='{self.rider_id}', grade_id='{self.grade_id}')>"
+        return (
+            f"<RiderGradeHistory(id='{self.id}', "
+            f"rider_id='{self.rider_id}', grade_id='{self.grade_id}')>"
+        )
