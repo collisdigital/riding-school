@@ -1,6 +1,12 @@
+networks:
+  app:
+    driver: bridge
+    name: riding-school-net
+
 services:
   db:
     image: postgres:16-alpine
+    networks: [app]
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -16,6 +22,7 @@ services:
   backend:
     build:
       context: ./backend
+    networks: [app]
     volumes:
       - ./backend:/app
     environment:
@@ -35,6 +42,7 @@ services:
     build:
       context: ./frontend
       target: development
+    networks: [app]
     healthcheck:
       test: ["CMD", "sh", "/app/healthcheck.sh"]
       interval: 5s
@@ -53,6 +61,7 @@ services:
   e2e:
     image: mcr.microsoft.com/playwright:v1.58.2-noble
     profiles: ["e2e"]
+    networks: [app]
     working_dir: /work/e2e
     environment:
       - PLAYWRIGHT_BASE_URL=http://frontend:5173
