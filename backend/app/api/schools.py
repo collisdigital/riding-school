@@ -43,13 +43,15 @@ def create_school(
         db.add(school)
         db.flush()  # Get school.id
 
-        # Get Admin Role
-        admin_role = db.query(Role).filter(Role.name == Role.ADMIN).first()
-        if not admin_role:
-            # Seed if missing
+        # Get Admin Role ID (Optimized with Cache)
+        admin_role_id = Role.get_id(db, Role.ADMIN)
+        if not admin_role_id:
+            # Fallback Seed if missing
             admin_role = Role(name=Role.ADMIN, description="Administrator")
             db.add(admin_role)
             db.flush()
+            admin_role_id = admin_role.id
+            Role._id_cache[Role.ADMIN] = admin_role_id
 
         # Create Membership
         membership = Membership(user_id=current_user.id, school_id=school.id)
@@ -57,7 +59,7 @@ def create_school(
         db.flush()  # Get membership.id
 
         # Assign Role
-        mem_role = MembershipRole(membership_id=membership.id, role_id=admin_role.id)
+        mem_role = MembershipRole(membership_id=membership.id, role_id=admin_role_id)
         db.add(mem_role)
 
         db.commit()
