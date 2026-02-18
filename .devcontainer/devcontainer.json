@@ -10,7 +10,9 @@
     },
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.12"
-    }
+    },
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {}
   },
   "forwardPorts": [5173, 8000, 5432],
   "postCreateCommand": "cd backend && pip install -r requirements.txt && cd ../frontend && npm install",
@@ -20,8 +22,12 @@
         "ms-python.python",
         "charliermarsh.ruff",
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
-      ]
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.rulers": [80, 120]
+      }
     }
   }
 }
