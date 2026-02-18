@@ -82,7 +82,7 @@ def seed_rbac(db: Session):
     # Warm Role ID cache
     for name, role in roles_map.items():
         if role.id:
-            Role._id_cache[name] = role.id
+            Role.stage_cache_update(db, name, role.id)
 
     # 2. Assign Permissions to Roles (Additive / Initial only)
     _assign_default_permissions(roles_map, perms_map)

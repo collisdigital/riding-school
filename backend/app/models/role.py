@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, ForeignKey, Integer, String, Table, event
 from sqlalchemy.orm import Session, relationship
 
 from .base import Base
@@ -28,6 +28,7 @@ class Role(Base):
 
     # Cache for role IDs to avoid redundant lookups
     _id_cache: ClassVar[dict[str, int]] = {}
+    _pending_cache_key: ClassVar[str] = "_pending_role_id_cache"
 
     @classmethod
     def get_id(cls, db: Session, name: str) -> int | None:
@@ -39,9 +40,18 @@ class Role(Base):
 
         role = db.query(cls).filter(cls.name == name).first()
         if role:
-            cls._id_cache[name] = role.id
+            cls.stage_cache_update(db, name, role.id)
             return role.id
         return None
+
+    @classmethod
+    def get_cached_id(cls, name: str) -> int | None:
+        return cls._id_cache.get(name)
+
+    @classmethod
+    def stage_cache_update(cls, db: Session, name: str, role_id: int) -> None:
+        pending = db.info.setdefault(cls._pending_cache_key, {})
+        pending[name] = role_id
 
     @classmethod
     def clear_cache(cls):
@@ -55,3 +65,14 @@ class Role(Base):
 
     def __repr__(self):
         return f"<Role(name='{self.name}')>"
+
+
+@event.listens_for(Session, "after_commit")
+def _flush_pending_role_cache(session: Session) -> None:
+    pending = session.info.pop(Role._pending_cache_key, {})
+    Role._id_cache.update(pending)
+
+
+@event.listens_for(Session, "after_rollback")
+def _clear_pending_role_cache(session: Session) -> None:
+    session.info.pop(Role._pending_cache_key, None)

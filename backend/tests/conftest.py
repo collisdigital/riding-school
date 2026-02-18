@@ -6,6 +6,7 @@ from app.api.auth import login_limiter
 from app.core.seed import seed_rbac
 from app.db import Base, get_db
 from app.main import app
+from app.models.role import Role
 
 # Use an in-memory SQLite for tests or a test postgres
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -31,6 +32,13 @@ def clear_rate_limit():
     login_limiter.requests.clear()
     yield
     login_limiter.requests.clear()
+
+
+@pytest.fixture(autouse=True)
+def clear_role_id_cache():
+    Role.clear_cache()
+    yield
+    Role.clear_cache()
 
 
 @pytest.fixture
