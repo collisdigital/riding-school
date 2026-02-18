@@ -51,7 +51,7 @@ def create_school(
             db.add(admin_role)
             db.flush()
             admin_role_id = admin_role.id
-            Role._id_cache[Role.ADMIN] = admin_role_id
+            Role.stage_cache_update(db, Role.ADMIN, admin_role_id)
 
         # Create Membership
         membership = Membership(user_id=current_user.id, school_id=school.id)

@@ -69,7 +69,7 @@ def _assign_rider_role(db: Session, membership_id: uuid.UUID) -> None:
         db.add(rider_role)
         db.flush()
         rider_role_id = rider_role.id
-        Role._id_cache[Role.RIDER] = rider_role_id
+        Role.stage_cache_update(db, Role.RIDER, rider_role_id)
 
     has_role = (
         db.query(MembershipRole)
