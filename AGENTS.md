@@ -89,10 +89,10 @@ npx prettier --check .
 npm test -- --run
 ```
 
-### 4. End-to-End Tests
+### 4. End-to-End Tests & Pre-Commit Debugging Workflow
 *Prerequisites (outside Docker): Backend and Frontend running locally at `http://localhost:8000` and `http://localhost:5173`.*
 
-**Run Tests (outside Docker):**
+**Setup & Execution (outside Docker):**
 ```bash
 # backend terminal
 cd backend
@@ -112,25 +112,38 @@ npm install
 npx playwright install chromium
 npx playwright test
 ```
-*Note: These tests verify critical multi-tenant isolation. If they fail, do NOT merge.*
 
 **Run Tests (Docker one-shot, auto shutdown):**
 ```bash
 docker compose --profile e2e up --build --abort-on-container-exit --exit-code-from e2e e2e
 ```
 
-**Run Tests (Docker alternative):**
+**E2E Test Execution:**
+Run the full suite locally:
 ```bash
-docker-compose up --build
 cd e2e
-npm install
 npx playwright test
 ```
 
-Optional cleanup:
+Run tests for a specific file or feature:
 ```bash
-docker compose down -v
+npx playwright test tests/auth.spec.ts
 ```
+
+**Console Log Capture on Failure:**
+A global fixture is configured to automatically listen for browser console errors. If an error occurs, it will be logged to the terminal with the prefix `BROWSER ERROR:`.
+- **Requirement:** Watch the terminal output during test execution.
+- **Implementation:** This is handled via `e2e/fixtures.ts`. If you are creating manual browser contexts (e.g., for multi-tenant tests), ensure you attach the listener or use the provided helpers.
+
+**Artifact Analysis:**
+If a test fails, Playwright automatically retains traces and screenshots. To inspect them:
+```bash
+npx playwright show-report
+```
+Use this report to view screenshots and trace files of failed steps.
+
+**The "Check-Before-Commit" Rule:**
+For any UI-heavy feature (like Drag-and-Drop or Multi-tenant Auth), the agent **MUST** run the headless browser suite and confirm **zero console errors** before finalizing the task.
 
 ## Project Layout
 
@@ -152,6 +165,7 @@ docker compose down -v
 
 ### E2E (`e2e/`)
 - `tests/`: Playwright specs. `auth.spec.ts` covers the main user journey.
+- `fixtures.ts`: Global test fixtures (includes console error listener).
 
 ## Critical Implementation Guidelines
 
