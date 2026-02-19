@@ -93,7 +93,7 @@ jobs:
           docker compose down --remove-orphans -v 2>/dev/null || true
           docker network prune -f
       - name: Run Docker Compose
-        run: docker compose up -d
+        run: RATE_LIMIT_REGISTER_REQUESTS=1000 docker compose up -d
       - name: Wait for services
         run: |
           timeout 60s bash -c 'until curl -s http://localhost:8000/health; do sleep 2; done'
