@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
 
+    # Rate Limiting
+    RATE_LIMIT_REGISTER_REQUESTS: int = 5
+    RATE_LIMIT_REGISTER_WINDOW: int = 60
+
     model_config = ConfigDict(case_sensitive=True)
 
     @model_validator(mode="after")
