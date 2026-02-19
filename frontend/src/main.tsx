@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import CreateSchoolPage from './pages/CreateSchoolPage'
 import DashboardPage from './pages/DashboardPage'
 import RidersPage from './pages/RidersPage'
+import GradesPage from './pages/GradesPage'
 import { ProtectedRoute } from './layouts/ProtectedRoute'
 import DashboardLayout from './layouts/DashboardLayout'
 import axios, { type InternalAxiosRequestConfig } from 'axios'
@@ -74,7 +75,7 @@ createRoot(document.getElementById('root')!).render(
         >
           <Route index element={<DashboardPage />} />
           <Route path="riders" element={<RidersPage />} />
-          {/* Add more routes here like 'grades' */}
+          <Route path="grades" element={<GradesPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

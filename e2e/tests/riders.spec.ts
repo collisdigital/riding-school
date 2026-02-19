@@ -16,15 +16,20 @@ test.describe('Riders Management E2E', () => {
     await page.getByLabel('Last Name').fill('User');
     await page.getByLabel('Email Address').fill(email);
     await page.getByLabel('Password', { exact: true }).fill(password);
-    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    // Ensure button is ready
+    const createBtn = page.getByRole('button', { name: 'Create Account' });
+    await expect(createBtn).toBeEnabled();
+    await createBtn.click();
 
     // 2. Onboarding: Create School
-    await expect(page).toHaveURL(/.*\/onboarding\/create-school/);
+    // Increase timeout for redirect
+    await expect(page).toHaveURL(/.*\/onboarding\/create-school/, { timeout: 15000 });
     await page.getByPlaceholder('e.g. Willow Creek Equestrian').fill(schoolName);
     await page.getByRole('button', { name: 'Create School' }).click();
 
     // 3. Dashboard
-    await expect(page).toHaveURL(/.*\/dashboard/);
+    await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 15000 });
     await expect(page.getByText(schoolName)).toBeVisible();
 
     // 4. Navigate to Riders

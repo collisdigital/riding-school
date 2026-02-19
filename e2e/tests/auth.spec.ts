@@ -1,6 +1,10 @@
 import { test, expect, addConsoleListener } from '../fixtures';
 
 test('full user journey: register -> create school -> dashboard', async ({ page }) => {
+  // Debug: Capture console logs
+  page.on('console', msg => console.log(`BROWSER CONSOLE: ${msg.text()}`));
+  page.on('pageerror', err => console.log(`BROWSER ERROR: ${err}`));
+
   const email = `owner-${Math.random().toString(36).substring(7)}@example.com`;
   
   // 1. Landing Page

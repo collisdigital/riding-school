@@ -8,7 +8,8 @@
 
 - **Parent-Child Relationships**: Re-implement the ability for Parents to link to Rider accounts (children). The previous implementation was removed during the multi-tenant refactor. Needs a new `UserRelationship` or `Family` model that is tenant-aware.
 
+- **Rider Promotion**: Implement a feature to "Promote" a rider to the next grade. This will involve a manual step by an instructor/admin to verify completion of all skills in the current grade and then trigger the `PATCH /riders/{id}/grade` update with the new grade ID.
+
 ## Pending Chores
 
 - **Chrome Autocomplete Suggestion**: `[DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) <input id=​"password" required class=​"block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 focus:​ring-blue-500 focus:​border-blue-500" type=​"password" value>​`
-

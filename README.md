@@ -19,6 +19,12 @@ erDiagram
     User ||--o{ RiderProfile : "has"
     School ||--o{ RiderProfile : "has"
     User ||--o{ RefreshToken : "has"
+    School ||--o{ Grade : "has"
+    School ||--o{ Skill : "has"
+    School ||--o{ RiderGradeHistory : "has"
+    RiderProfile ||--o{ RiderGradeHistory : "history"
+    Grade ||--o{ Skill : "contains"
+    Grade ||--o{ RiderGradeHistory : "associated_with"
 
     Membership ||--o{ MembershipRole : "has"
     Role ||--o{ MembershipRole : "assigned_to"
@@ -63,6 +69,37 @@ erDiagram
         datetime created_at
         datetime updated_at
         datetime deleted_at
+    }
+
+    Grade {
+        uuid id PK
+        uuid school_id FK
+        string name
+        string description
+        int sequence_order
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+    }
+
+    Skill {
+        uuid id PK
+        uuid grade_id FK
+        uuid school_id FK
+        string name
+        string description
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+    }
+
+    RiderGradeHistory {
+        uuid id PK
+        uuid rider_id FK
+        uuid grade_id FK
+        uuid school_id FK
+        datetime started_at
+        datetime completed_at
     }
 
     RefreshToken {

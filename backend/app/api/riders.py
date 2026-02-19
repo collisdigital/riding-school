@@ -8,11 +8,13 @@ from sqlalchemy.sql import func
 
 from app.api import deps
 from app.db import get_db
+from app.models.grade import Grade
 from app.models.membership import Membership, MembershipRole
+from app.models.rider_grade_history import RiderGradeHistory
 from app.models.rider_profile import RiderProfile
 from app.models.role import Role
 from app.models.user import User
-from app.schemas.rider import RiderCreate, RiderResponse, RiderUpdate
+from app.schemas.rider import RiderCreate, RiderGradeUpdate, RiderResponse, RiderUpdate
 from app.schemas.token import TokenPayload
 
 router = APIRouter()
@@ -308,3 +310,68 @@ def delete_rider(
         raise HTTPException(status_code=500, detail="Failed to delete rider") from None
 
     return None
+
+
+@router.patch("/{rider_id}/grade", status_code=status.HTTP_204_NO_CONTENT)
+def update_rider_grade(
+    rider_id: uuid.UUID,
+    grade_update: RiderGradeUpdate,
+    db: Session = Depends(get_db),
+    token: TokenPayload = Depends(deps.RequirePermission("grades:signoff")),
+):
+    """
+    Update a rider's current grade.
+    Marks the previous active grade history as completed and starts a new one.
+    """
+    if not token.sid:
+        raise HTTPException(status_code=400, detail="Invalid school context")
+    school_id = uuid.UUID(token.sid)
+
+    # 1. Verify Rider exists
+    rider = (
+        db.query(RiderProfile)
+        .filter(RiderProfile.id == rider_id, RiderProfile.school_id == school_id)
+        .first()
+    )
+    if not rider:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Rider not found"
+        )
+
+    # 2. Verify Grade exists
+    grade = (
+        db.query(Grade)
+        .filter(Grade.id == grade_update.grade_id, Grade.school_id == school_id)
+        .first()
+    )
+    if not grade:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Grade not found"
+        )
+
+    # 3. Find current active history and complete it
+    current_history = (
+        db.query(RiderGradeHistory)
+        .filter(
+            RiderGradeHistory.rider_id == rider_id,
+            RiderGradeHistory.school_id == school_id,
+            RiderGradeHistory.completed_at.is_(None),
+        )
+        .first()
+    )
+
+    if current_history:
+        # If moving to the same grade, no-op
+        if current_history.grade_id == grade_update.grade_id:
+            return
+
+        current_history.completed_at = func.now()
+
+    # 4. Create new history
+    new_history = RiderGradeHistory(
+        rider_id=rider_id,
+        grade_id=grade_update.grade_id,
+        school_id=school_id,
+    )
+    db.add(new_history)
+    db.commit()

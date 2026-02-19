@@ -34,3 +34,32 @@ export interface RiderUpdate {
   weight_kg?: number
   date_of_birth?: string
 }
+
+export interface Skill {
+  id: string
+  grade_id: string
+  name: string
+  description?: string
+}
+
+export interface Grade {
+  id: string
+  name: string
+  description?: string
+  sequence_order: number
+  skills: Skill[]
+}
+
+export interface GradeCreate {
+  name: string
+  description?: string
+}
+
+export interface SkillCreate {
+  name: string
+  description?: string
+}
+
+export interface GradeReorder {
+  ordered_ids: string[]
+}

@@ -1,0 +1,23 @@
+INFO:     Started server process [36151]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:44636 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49420 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49426 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49442 - "POST /api/schools/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49454 - "GET /api/riders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49460 - "GET /api/grades/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49464 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49472 - "GET /api/riders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49482 - "GET /api/grades/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49490 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49500 - "GET /api/grades/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49516 - "GET /api/grades/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49528 - "POST /api/grades/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49534 - "POST /api/grades/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49540 - "POST /api/grades/019c711a-9640-7bcf-baeb-432d6131d048/skills HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36151]

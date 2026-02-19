@@ -19,6 +19,15 @@ class School(Base, TimestampMixin):
     rider_profiles = relationship(
         "RiderProfile", back_populates="school", cascade="all, delete-orphan"
     )
+    grades = relationship(
+        "Grade", back_populates="school", cascade="all, delete-orphan"
+    )
+    skills = relationship(
+        "Skill", back_populates="school", cascade="all, delete-orphan"
+    )
+    rider_grade_history = relationship(
+        "RiderGradeHistory", back_populates="school", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<School(name='{self.name}')>"
