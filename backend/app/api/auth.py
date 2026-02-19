@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.auth_helpers import get_user_permissions, set_auth_cookies
+from app.core.config import settings
 from app.core.ratelimit import RateLimiter
 from app.db import get_db
 from app.models.refresh_token import RefreshToken
@@ -22,8 +23,8 @@ login_limiter = RateLimiter(
     error_message="Too many login attempts. Please try again later.",
 )
 register_limiter = RateLimiter(
-    requests_limit=5,
-    time_window=60,
+    requests_limit=settings.RATE_LIMIT_REGISTER_REQUESTS,
+    time_window=settings.RATE_LIMIT_REGISTER_WINDOW,
     error_message="Too many registration attempts. Please try again later.",
 )
 
