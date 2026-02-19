@@ -1,3 +1,5 @@
+import os
+
 from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
 
@@ -19,6 +21,15 @@ class Settings(BaseSettings):
     RATE_LIMIT_REGISTER_WINDOW: int = 60
 
     model_config = ConfigDict(case_sensitive=True)
+
+    @model_validator(mode="after")
+    def apply_local_rate_limit_defaults(self):
+        if (
+            self.ENVIRONMENT in {"development", "local", "test"}
+            and "RATE_LIMIT_REGISTER_REQUESTS" not in os.environ
+        ):
+            self.RATE_LIMIT_REGISTER_REQUESTS = 1000
+        return self
 
     @model_validator(mode="after")
     def validate_secret_key(self):
