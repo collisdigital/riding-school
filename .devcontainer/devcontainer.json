@@ -33,7 +33,37 @@
         "rangav.vscode-thunder-client"
       ],
       "settings": {
-        "editor.rulers": [80, 120]
+        "editor.rulers": [80, 120],
+        "pgsql.serverGroups": [
+          {
+            "name": "Servers",
+            "id": "4A344A32-01A5-4F38-A0FB-08085161641B",
+            "isDefault": true
+          }
+        ],
+        "pgsql.connections": [
+          {
+            "id": "24340724-3BC4-4BB4-BE4B-C7DEAE68CE02",
+            "groupId": "4A344A32-01A5-4F38-A0FB-08085161641B",
+            "authenticationType": "SqlLogin",
+            "connectTimeout": 15,
+            "applicationName": "vscode-pgsql",
+            "clientEncoding": "utf8",
+            "sslmode": "prefer",
+            "sshSavePassword": true,
+            "savePassword": true,
+            "sslRootCertMode": "none",
+            "connectionString": "postgresql://postgres:postgres@localhost:5432/riding_school",
+            "server": "localhost",
+            "user": "postgres",
+            "port": "5432",
+            "database": "riding_school",
+            "password": "postgres",
+            "profileName": "riding-school",
+            "expiresOn": 0,
+            "sshPassword": ""
+          }
+        ]
       }
     }
   }
